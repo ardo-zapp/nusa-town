@@ -1,0 +1,28 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"target": "es5",
+		"module": "es2015",
+		"baseUrl": ".",
+		"preserveConstEnums": false,
+    "paths": {
+			"lodash": ["src/ts/lodash.ts"]
+    }
+	},
+	"include": [
+		"src/ts/bootstrap.ts",
+		"src/ts/bootstrap-admin.ts",
+		"src/ts/bootstrap-tools.ts"
+	],
+	"files": [
+		"src/ts/components/app/app.module.ts",
+		"src/ts/components/admin/admin.module.ts",
+		"src/ts/components/tools/tools.module.ts"
+	],
+	"angularCompilerOptions": {
+		"genDir": "src/ts",
+		"strictMetadataEmit": false,
+		"skipMetadataEmit": true,
+		"preserveWhitespaces": true
+	}
+}
