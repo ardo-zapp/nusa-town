@@ -91,7 +91,7 @@ const manifest = cb => {
 
 const sprites = () => Promise.resolve() // del(['tools/output/images/*'])
 	.then(() => runAsync('node', ['src/scripts/tools/create-sprites.js']))
-	.then(() => gulp.src('tools/output/images/*')
+	.then(() => gulp.src('tools/output/images/*', { encoding: false })
 		.pipe(gulpif(!argv.fast, imagemin()))
 		.pipe(gulp.dest('assets/images')));
 
@@ -158,7 +158,7 @@ const assetsRev = cb => {
 	fs.writeFile('src/ts/generated/rev.ts', lintCode(code), 'utf8', cb);
 };
 
-const assetsCopy = () => gulp.src('assets/**/*')
+const assetsCopy = () => gulp.src('assets/**/*', { encoding: false })
 	.pipe(gulpif(!argv.fast, imagemin([
 		imagemin.gifsicle({ interlaced: true }),
 		imagemin.jpegtran({ progressive: true }),
@@ -228,7 +228,7 @@ const size = () => gulp.src([
 	'build/assets-admin/styles/*.css',
 ]).pipe(sizereport({ gzip: true, total: true }));
 
-const music = () => gulp.src(path.join(config.assetsPath, 'assets/music/*.wav'), { read: false })
+const music = () => gulp.src(path.join(config.assetsPath, 'assets/music/*.wav'), { read: false, encoding: false })
 	.pipe(shell([
 		'ffmpeg -y -i "<%= file.path %>" -acodec libmp3lame "<%= out(file.path, ".mp3") %>"',
 		'ffmpeg -y -i "<%= file.path %>" -acodec libvorbis "<%= out(file.path, ".webm") %>"',
