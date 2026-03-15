@@ -23,7 +23,9 @@ export class TestController implements Controller {
 		const map = this.map;
 
 		if (DEVELOPMENT) {
-			Promise.all(times(10, i => `debug ${i + 1}`).map(name => Character.findOne({ name }).exec()))
+			const names = times(10, i => `debug ${i + 1}`);
+			Character.find({ name: { $in: names } }).exec()
+				.then(found => names.map(name => found.find(f => f.name === name)))
 				.then(compact)
 				.then(items => items.forEach((item, i) => {
 					const name = item.name;
