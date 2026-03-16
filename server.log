@@ -1,0 +1,19 @@
+
+> nusa-town@0.55.2 startlocal
+> node pony-town.js --login --admin --game --local
+
+(node:37079) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[Mar 15 21:19:09] [info] Listening on port 8090 (production, login, admin, game:main) (server.ts:417)
+[Mar 15 21:19:19] [error] MongooseError: Operation `events.findOne()` buffering timed out after 10000ms
+    at Timeout.<anonymous> (/app/node_modules/mongoose/lib/drivers/node-mongodb-native/collection.js:198:23)
+    at listOnTimeout (node:internal/timers:585:17)
+    at processTimers (node:internal/timers:521:7) (:)
+
+/app/node_modules/mongoose/lib/drivers/node-mongodb-native/collection.js:198
+          const err = new MongooseError(message);
+                      ^
+MongooseError: Operation `events.find()` buffering timed out after 10000ms
+    at Timeout.<anonymous> (/app/node_modules/mongoose/lib/drivers/node-mongodb-native/collection.js:198:23)
+    at listOnTimeout (node:internal/timers:585:17)
+    at processTimers (node:internal/timers:521:7)
