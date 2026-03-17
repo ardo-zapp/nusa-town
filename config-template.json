@@ -1,0 +1,83 @@
+{
+  "title": "Nusa Town",
+  "discordLink": "<LINK_TO_DISCORD_INVITE>",
+  "twitterLink": "<LINK_TO_TWITTER>",
+  "contactEmail": "your_contact_email@example.com",
+  "contactDiscord": "your_contact_discord#0000",
+  "port": 8090,
+  "adminPort": 8091,
+  "host": "http://localhost:8090/",
+  "local": "localhost:8090",
+  "adminLocal": "localhost:8091",
+  "proxy": false,
+  "secret": "<some_random_string_here>",
+  "token": "<some_random_string_here>",
+  "db": "mongodb://<username>:<password>@localhost:27017/<database_name>",
+  "oauth": {
+    "google": {
+      "clientID": "<CLIENT_ID_HERE>",
+      "clientSecret": "<CLIENT_SECERET_HERE>"
+    },
+    "github": {
+      "clientID": "<CLIENT_ID_HERE>",
+      "clientSecret": "<CLIENT_SECERET_HERE>"
+    },
+    "discord": {
+      "clientID": "<CLIENT_ID_HERE>",
+      "clientSecret": "<CLIENT_SECERET_HERE>"
+    }
+  },
+  "assetsPath": "assets-source",
+  "season": "spring",
+  "holiday": "none",
+  "servers": [
+    {
+      "id": "main",
+      "port": 8090,
+      "wsPort": 10092,
+      "path": "/s00/ws",
+      "local": "localhost:8090",
+      "name": "18+ Server",
+      "desc": "18+ speaking server, Adult topic are allowed",
+      "season": "summer",
+      "holiday": "none",
+      "flag": "",
+      "flags": {
+        "test": false,
+        "editor": false
+      },
+      "alert": "18+"
+    },
+    {
+      "id": "safe",
+      "port": 8091,
+      "wsPort": 10093,
+      "path": "/s01/ws",
+      "local": "localhost:8091",
+      "name": "Safe Server [PG]",
+      "desc": "Safe speaking server, Adult topic not allowed",
+      "season": "summer",
+      "holiday": "none",
+      "flag": "",
+      "flags": {
+        "test": false,
+        "editor": false
+      }
+    },
+    {
+      "id": "dev",
+      "port": 8092,
+      "wsPort": 10094,
+      "path": "/s02/ws",
+      "local": "localhost:8092",
+      "name": "Dev server",
+      "desc": "Development server",
+      "flag": "test",
+      "flags": {
+        "test": true,
+        "objects": true
+      },
+      "alert": "18+"
+    }
+  ]
+}
