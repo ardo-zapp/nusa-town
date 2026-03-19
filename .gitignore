@@ -8,3 +8,5 @@ node_modules/
 /.vs
 
 /config.json
+.env
+nginx.conf
