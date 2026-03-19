@@ -265,6 +265,76 @@ npx gulp dev --test     # run with tests
 npx gulp dev --coverage # run with tests and code coverage
 ```
 
+## Running with Docker
+
+### Prerequisites
+
+* [Docker](https://docs.docker.com/get-docker/)
+* [Docker Compose](https://docs.docker.com/compose/install/) (included with Docker Desktop)
+
+### Setup
+
+1. Create environment file from template:
+
+```bash
+cp .env.example .env
+```
+
+2. Create config file from template:
+
+```bash
+cp config-template.json config.json
+```
+
+3. Update `config.json`:
+   - Set `"proxy": true`
+   - Set `"db"` to: `"mongodb://<MONGO_USERNAME>:<MONGO_PASSWORD>@mongodb:27017/<MONGO_DATABASE>?authSource=admin"` (use the values from your `.env` file)
+   - Generate **two different** random values for `"secret"` and `"token"`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
+```
+
+4. Build and run:
+
+```bash
+docker compose up --build
+```
+
+### Services Architecture
+
+The Docker setup runs the following services behind an Nginx reverse proxy:
+
+| Service | Description | Internal Port |
+|---|---|---|
+| `nginx` | Reverse proxy, routes all traffic | 80 → exposed as 8090 |
+| `login` | Authentication & web page | 8090 |
+| `game-main` | Main game server (18+) | 10092 (WS) |
+| `game-safe` | Safe game server (PG) | 10093 (WS) |
+| `admin` | Admin dashboard | 8091 |
+| `mongodb` | Database | 27017 |
+
+Access the application:
+- **Game**: `http://localhost:8090`
+- **Admin**: `http://localhost:8090/admin/`
+
+### Useful Commands
+
+```bash
+docker compose up --build     # build and start all services
+docker compose up -d          # start in background (detached)
+docker compose down           # stop all services
+docker compose logs -f        # view logs (follow mode)
+docker compose logs game-main # view logs for specific service
+docker compose restart login  # restart specific service
+```
+
+### Adding Roles via Docker
+
+```bash
+docker compose exec game-main node cli.js --addrole <account_id> superadmin
+```
+
 ## Apache Reverse Proxy
 
 Enabling Necessary Apache Modules
@@ -710,6 +780,76 @@ npx gulp test           # terminal 4 (opsional)
 npx gulp dev --sprites  # jalankan dengan generasi lembar sprite (gunakan src/ts/tools/trigger.txt untuk memicu generasi sprite tanpa me-restart gulp)
 npx gulp dev --test     # jalankan dengan tes
 npx gulp dev --coverage # jalankan dengan tes dan cakupan kode (code coverage)
+```
+
+## Menjalankan dengan Docker
+
+### Persyaratan
+
+* [Docker](https://docs.docker.com/get-docker/)
+* [Docker Compose](https://docs.docker.com/compose/install/) (sudah termasuk dalam Docker Desktop)
+
+### Pengaturan
+
+1. Buat file environment dari template:
+
+```bash
+cp .env.example .env
+```
+
+2. Buat file konfigurasi dari template:
+
+```bash
+cp config-template.json config.json
+```
+
+3. Perbarui `config.json`:
+   - Atur `"proxy": true`
+   - Atur `"db"` menjadi: `"mongodb://<MONGO_USERNAME>:<MONGO_PASSWORD>@mongodb:27017/<MONGO_DATABASE>?authSource=admin"` (gunakan nilai dari file `.env` Anda)
+   - Buat **dua nilai acak yang berbeda** untuk `"secret"` dan `"token"`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
+```
+
+4. Build dan jalankan:
+
+```bash
+docker compose up --build
+```
+
+### Arsitektur Layanan (Services)
+
+Docker menjalankan layanan berikut di belakang Nginx reverse proxy:
+
+| Layanan | Deskripsi | Port Internal |
+|---|---|---|
+| `nginx` | Reverse proxy, mengarahkan semua traffic | 80 → diekspos sebagai 8090 |
+| `login` | Otentikasi & halaman web | 8090 |
+| `game-main` | Server game utama (18+) | 10092 (WS) |
+| `game-safe` | Server game aman (PG) | 10093 (WS) |
+| `admin` | Dashboard admin | 8091 |
+| `mongodb` | Database | 27017 |
+
+Akses aplikasi:
+- **Game**: `http://localhost:8090`
+- **Admin**: `http://localhost:8090/admin/`
+
+### Perintah yang Berguna
+
+```bash
+docker compose up --build     # build dan jalankan semua layanan
+docker compose up -d          # jalankan di background (detached)
+docker compose down           # hentikan semua layanan
+docker compose logs -f        # lihat log (mode follow)
+docker compose logs game-main # lihat log untuk layanan tertentu
+docker compose restart login  # restart layanan tertentu
+```
+
+### Menambahkan Peran via Docker
+
+```bash
+docker compose exec game-main node cli.js --addrole <account_id> superadmin
 ```
 
 ## Apache Reverse Proxy
