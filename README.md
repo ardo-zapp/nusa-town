@@ -214,6 +214,7 @@ In-game Tools are accessible at `<base_url>/tools/` (only available in dev mode 
 For larger servers, you'll want to separate sub-servers into different processes instead of running them on a single thread. The `id` string (e.g., `main`, `safe`, `dev`) must match the `id` field defined inside the `servers: []` block of your `config.json`.
 
 **Method 1 (Recommended Standard Multi-Server)**
+
 This keeps your login and admin connected to your main server process, while hosting other sub-servers separately:
 ```bash
 npm start                       # Starts login, admin, and the "main" game server
@@ -222,6 +223,7 @@ node pony-town.js --game dev    # Starts the dev server (in a separate terminal/
 ```
 
 **Method 2 (Fully Isolated Processes)**
+
 If you want to isolate everything including the login and admin standalone server:
 ```bash
 node pony-town.js --login                    # Login server
@@ -815,6 +817,7 @@ Berbagai In-game Tools dapat diakses di `<base_url>/tools/` (tersedia saat mode 
 Untuk basis server yang luas, Anda diwajibkan menjalankan masing-masing sub-server pada *process* (terminal) yang terpisah. Nama identifikasi server seperti `main`, `safe`, dan `dev` diambil dari properti `id` di dalam pengaturan `servers: []` pada file `config.json` Anda.
 
 **Metode 1 (Standard Multi-Server)**
+
 Metode ini adalah cara tercepat. Anda menjalankan server login, admin, dan game `main` sekaligus di satu tempat, kemudian menjalankan *sub-server* lainnya di background (atau menggunakan terminal/screen berbeda):
 ```bash
 npm start                       # Memulai server login, admin, dan "main" game secara bersamaan
@@ -823,6 +826,7 @@ node pony-town.js --game dev    # Memulai server "dev" (di terminal terpisah)
 ```
 
 **Metode 2 (Fully Isolated Process / Mandiri)**
+
 Metode ini benar-benar memisahkan semuanya, termasuk memisah server login dengan server admin standalone.
 ```bash
 node pony-town.js --login                    # Menjalankan server Login
