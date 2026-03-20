@@ -4,7 +4,6 @@ import { Request } from 'express';
 import { isString } from 'lodash';
 import { Strategy as GoogleStrategy } from '@passport-next/passport-google-oauth2';
 import { Strategy as TwitterStrategy } from 'passport-twitter';
-import { Strategy as FacebookStrategy } from '@passport-next/passport-facebook';
 import { Strategy as GithubStrategy } from 'passport-github2';
 import { Strategy as VKontakteStrategy } from 'passport-vkontakte';
 import { Strategy as PatreonStrategy } from 'passport-patreon';
@@ -68,12 +67,6 @@ const providerList: OAuthProviderInfo[] = [
 		strategy: TwitterStrategy,
 	},
 	{
-		id: 'facebook',
-		name: 'Facebook',
-		color: '#3765A3',
-		strategy: FacebookStrategy,
-	},
-	{
 		id: 'github',
 		name: 'GitHub',
 		color: '#800080',
@@ -110,8 +103,6 @@ export function getProfileUrl(profile: OAuthProfile): string | undefined {
 		return `https://twitter.com/${profile.username}`;
 	} else if (profile.provider === 'tumblr') {
 		return `http://${profile.username}.tumblr.com/`;
-	} else if (profile.provider === 'facebook') {
-		return `http://www.facebook.com/${profile.id}`;
 	} else if (profile.provider === 'discord') {
 		return undefined;
 	} else if (profile._json.attributes && profile._json.attributes.url) { // patreon

@@ -31,7 +31,7 @@ export class UwsAdapterServer extends EventEmitter {
                     isAborted = true;
                 });
 
-                // Simpan url dan header untuk digunakan ag-sockets yang butuh req.url
+                // Pre-cache URL and headers as expected by the underlying socket router
                 const url = req.getUrl();
                 const query = req.getQuery();
                 const headers: any = {};
@@ -46,7 +46,7 @@ export class UwsAdapterServer extends EventEmitter {
                     remoteAddress = Buffer.from(buffer).toString('utf8');
                 } catch(e) {}
 
-                // Buat fake req object untuk ag-sockets
+                // Construct pseudo-request object for compatibility with socket protocols
                 const fakeReq = {
                     url: query ? `${url}?${query}` : url,
                     headers: headers,
@@ -109,11 +109,11 @@ export class UwsAdapterServer extends EventEmitter {
                 const userData = ws.getUserData();
                 if (userData && userData.fakeSocket) {
                     if (isBinary) {
-                        // ubah ArrayBuffer dari uWS ke Buffer untuk node
+                        // Convert uWS ArrayBuffer to Node.js Buffer explicitly
                         const buf = Buffer.from(message.slice(0));
                         userData.fakeSocket.emit('message', buf);
                     } else {
-                        // Jika text frame, kirim sebagai string karena JSON parsing di ag-sockets membutuhkannya
+                        // Forward text frames as strings to comply with underlying JSON parsers
                         const str = Buffer.from(message.slice(0)).toString('utf8');
                         userData.fakeSocket.emit('message', str);
                     }

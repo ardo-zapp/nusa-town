@@ -19,7 +19,8 @@
 		"strictFunctionTypes": true,
 		"sourceMap": true,
 		"preserveConstEnums": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"esModuleInterop": false
 	},
 	"exclude": [
 		"build",

@@ -517,7 +517,6 @@ export class PonyTownGame implements Game {
 			// 	this.debugShortcuts.sort();
 			// };
 
-			//MINIMAP DISINI
 			if (BETA) {
 				// editor
 				this.input.onPressed(Key.BACKSPACE, () => {

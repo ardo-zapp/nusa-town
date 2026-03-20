@@ -18,8 +18,8 @@ import { loadImage, loadImageSync, createCanvas } from '../server/canvasUtilsNod
 
 require('chai').use(require('chai-as-promised'));
 
-(mongoose as any).models = {};
-(mongoose as any).modelSchemas = {};
+try { (mongoose as any).models = {}; } catch (e) { }
+try { (mongoose as any).modelSchemas = {}; } catch (e) { }
 (global as any).TESTS = true;
 (global as any).TOOLS = true;
 (global as any).performance = Date;

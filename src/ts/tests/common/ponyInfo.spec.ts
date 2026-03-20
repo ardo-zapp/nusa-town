@@ -181,11 +181,11 @@ describe('ponyInfo', () => {
 
 		fields.forEach(field => it(`syncs '${field}' sprite set`, () => {
 			const pony = ponyInfo({
-				[field]: <Set>{
+				[field]: {
 					fills: ['ff0000'],
 					outlines: ['00ff00'],
 					lockOutlines: [true],
-				},
+				} as Set,
 			});
 
 			syncLockedPonyInfo(pony);

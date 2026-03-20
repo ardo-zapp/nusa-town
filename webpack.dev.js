@@ -4,7 +4,7 @@ const common = require('./webpack.common.js');
 
 const compilerOptions = {
 	...require('./tsconfig.json').compilerOptions,
-	target: 'es5',
+	target: 'es2017',
 	module: 'es2015',
 };
 

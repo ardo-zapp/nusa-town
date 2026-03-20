@@ -13,7 +13,8 @@ class MockHTMLElement {
 	attributes: any = {};
 	className?: string;
 	parentElement?: MockHTMLElement;
-	constructor(public tagName: string) { }
+	tagName: string;
+	constructor(tagName: string) { this.tagName = tagName; }
 	get firstChild() {
 		return this.children[0];
 	}
@@ -35,7 +36,8 @@ class MockHTMLElement {
 }
 
 class MockTextNode {
-	constructor(public nodeValue: string) { }
+	nodeValue: string;
+	constructor(nodeValue: string) { this.nodeValue = nodeValue; }
 }
 
 describe('htmlUtils', () => {
