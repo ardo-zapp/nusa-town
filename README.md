@@ -385,7 +385,11 @@ A reverse proxy must be set up to serve your game over standard HTTP/HTTPS ports
     ProxyPass "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin" flushpackets=on keepalive=On retry=0 timeout=3600 max=50 acquire=3000
     ProxyPassReverse "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin"
 
-    # HTTP Fallback / Root Game (port login/main: 8090)
+    # HTTP Fallback - Standalone Admin (port admin: 8091)
+    ProxyPass "/admin/" "http://localhost:8091/admin/" keepalive=On retry=0
+    ProxyPassReverse "/admin/" "http://localhost:8091/admin/"
+
+    # HTTP Fallback - Root (port login: 8090)
     ProxyPass "/" "http://localhost:8090/" keepalive=On retry=0
     ProxyPassReverse "/" "http://localhost:8090/"
 
@@ -989,7 +993,11 @@ Reverse proxy wajib dipasang untuk melayani game Anda di port HTTP/HTTPS standar
     ProxyPass "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin" flushpackets=on keepalive=On retry=0 timeout=3600 max=50 acquire=3000
     ProxyPassReverse "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin"
 
-    # HTTP Fallback / Root Game (port login/main: 8090)
+    # HTTP Fallback - Standalone Admin (port admin: 8091)
+    ProxyPass "/admin/" "http://localhost:8091/admin/" keepalive=On retry=0
+    ProxyPassReverse "/admin/" "http://localhost:8091/admin/"
+
+    # HTTP Fallback - Root (port login: 8090)
     ProxyPass "/" "http://localhost:8090/" keepalive=On retry=0
     ProxyPassReverse "/" "http://localhost:8090/"
 
