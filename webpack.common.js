@@ -45,8 +45,8 @@ module.exports = {
 						options: {
 							ident: 'postcss',
 							plugins: loader => [
-								require('autoprefixer')('last 2 versions'),
-								require('cssnano')({ discardComments: { removeAll: true } }),
+								require('autoprefixer')({ overrideBrowserslist: ['last 2 versions'] }),
+								require('cssnano')({ preset: ['default', { discardComments: { removeAll: true } }] }),
 							],
 						},
 					},

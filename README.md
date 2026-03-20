@@ -1,89 +1,106 @@
 # Nusa Town
 
-[English](#english) | [Bahasa Indonesia](#bahasa-indonesia)
+<details>
+<summary>English</summary>
+
+<br>
+
+A game of ponies building a town.
+
+This is a Pony Town Custom Server project with modified Indonesian nuances. This project requires some adjustments, please adjust it yourself according to your needs.
+
+**NOTE:** This is an old version of the project. Pony Town no longer provides source code and has become closed source. **Please do not use this project for commercial purposes.**
 
 ---
 
-<a name="english"></a>
-# English
+### 1. Prerequisites
 
-A game of ponies building a town
-
-This is a Pony Town Custom Server project with modified Indonesian nuances.
-This project requires some adjustments, please adjust it yourself according to your needs.
-
-NOTE: This is an old version of the project, Pony Town no longer provides source code and has become closed source, you should use this repository as learning material.
-
-## Prerequisites
-
+* **Operating System**: Ubuntu 24.04.4 LTS (Highly Recommended) or Debian.
 * [Node.js](https://nodejs.org/en/download/) (version 24 LTS)
 * MongoDB 7+: [download link](https://www.mongodb.com/download-center/community) and [installation instructions](https://docs.mongodb.com/manual/administration/install-community/)
-* System dependencies for Canvas (Required for Ubuntu/Debian): `sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev pkg-config`
-* [ImageMagick](https://imagemagick.org/script/download.php#windows) (optional, required for generating preview gifs in animation tool)
+* System dependencies for Canvas:
+  ```bash
+  sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev pkg-config
+  ```
 
-## Installation
+---
+
+### 2. Installation
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
-## Setup
+---
 
-Create `config.json` file in the root folder with the following content:
+### 3. Setup Configuration
+
+To start configuring your server, simply copy the template provided:
+
+```bash
+cp config-template.json config.json
+```
+
+Then edit `config.json` to suit your needs. Below is the explanation of what each property does:
 
 ```json
 {
-  "title": "My custom server",
-  "discordLink": "<LINK_TO_DISCORD_INVITE>",
-  "contactDiscord": "your_contact_discord#0000", // optional
-  "twitterLink": "<LINK_TO_TWITTER>",
-  "contactEmail": "your_contact_email",
-  "port": 8090,
-  "adminPort": 8091,
-  "host": "http://localhost:8090/",
-  "local": "localhost:8090",
-  "adminLocal": "localhost:8091",
-  "proxy": false,
-  "secret": "<some_random_string_here>",
-  "token": "<some_random_string_here>",
-  "db": "mongodb://<username>:<password>@localhost:27017/<database_name>", // use values you used when setting up database
-  "analytics": { // optional google analytics
-    "trackingID": "<tracking_id>"
+  "title": "My custom server", // Name of your server displayed on the browser tab
+  "discordLink": "<LINK_TO_DISCORD_INVITE>", // URL to your Discord server shown in the footer
+  "twitterLink": "<LINK_TO_TWITTER>", // URL to your Twitter account
+  "contactEmail": "your_contact_email@example.com", // Support contact email
+  "contactDiscord": "your_contact_discord#0000", // Support discord username
+  "wdsUrl": "http://localhost:8091", // Webpack Dev Server URL used during local development (npm run wds)
+  "sw": true, // Toggle Service Worker registration (used for PWA/offline mode)
+  "noindex": false, // Sets X-Robots-Tag header to prevent search engines from indexing your site
+  "rollbar": { // Error tracking configuration (leave empty if unused)
+    "environment": "",
+    "clientToken": "",
+    "serverToken": "",
+    "gulpToken": ""
   },
-  "facebookAppId": "<facebook_id>", // optional facebook app link
-  "assetsPath": "<path_to_graphics_assets>", // optional, for asset generation
-  "season": "spring", // optional, defaults to spring; season for all servers, seasons are "spring", "summer", "autumn" and "winter"
-  "holiday": "none", // optional, defaults to none; holiday for all servers, holidays are "none", "halloween", "christmas", "stpatricks" and "easter"
-  "oauth": {
-    "google": {
-      "clientID": "<CLIENT_ID_HERE>",
-      "clientSecret": "<CLIENT_SECRET_HERE>"
-    }
-    // other oauth entries here
+  "analytics": { // Google Analytics config (leave empty if unused)
+    "trackingID": ""
   },
-  "servers": [
+  "port": 8090, // The public-facing HTTP port the game server listens to
+  "adminPort": 8091, // The HTTP port for the admin/standalone server
+  "host": "http://localhost:8090/", // The root public URL of your server. Change to "https://example.com/" in production.
+  "local": "localhost:8090", // IP:Port pair used for internal cluster communication (login/game API)
+  "adminLocal": "localhost:8091", // Internal IP:Port pair for the admin server
+  "proxy": false, // Set to true if you are using Nginx/Apache/Cloudflare reverse proxies so Express trusts proxy headers (X-Forwarded-For)
+  "secret": "<some_random_string_here>", // Secret for hashing Express session cookies (must be >= 16 chars)
+  "token": "<some_random_string_here>", // Secret token for verifying internal cluster API requests (must be >= 16 chars)
+  "db": "mongodb://<username>:<password>@localhost:27017/<database_name>", // Connection string for your MongoDB database
+  "oauth": { // OAuth keys for social login
+    "google": { ... },
+    "github": { ... },
+    "discord": { ... }
+  },
+  "season": "spring", // Default season ("spring", "summer", "autumn", "winter") applied to all servers globally
+  "holiday": "none", // Default holiday ("none", "halloween", "christmas", etc) applied to all servers globally
+  "servers": [ // Defines the individual game sub-servers running on your cluster
     {
-      "id": "dev",
-      "port": 8090,
-      "path": "/s00/ws",
-      "local": "localhost:8090",
-      "name": "Dev server",
-      "desc": "Development server",
-      "season": "summer", // optional, defaults to summer, seasons are "spring", "summer", "autumn" and "winter"
-      "holiday": "none", // optional, defaults to none, holidays are "none", "halloween", "christmas", "stpatricks" and "easter"
-      "flag": "test", // optional system flag ("test", "star" or space separated list of country flags)
-      "flags": { // optional feature flags
-        "test": true, // test server
-        "editor": true // in-game editor
+      "id": "main", // Server ID (used by CLI and start commands)
+      "port": 8090, // Express port for the game REST API
+      "wsPort": 10092, // uWebSockets port for the game WebSocket traffic
+      "path": "/s00/ws", // The WebSocket route path matching the reverse proxy config
+      "local": "localhost:8090", // Internal host for the cluster to send requests to this server
+      "name": "18+ Server", // Server name visible to players in the lobby
+      "desc": "18+ speaking server", // Server description in the lobby
+      "season": "summer", // Overrides global season setting
+      "holiday": "none", // Overrides global holiday setting
+      "flag": "", // An optional string identifier label for the UI (e.g. 'test', 'ru')
+      "flags": { // Server feature toggles
+        "test": false, // Highlights the server as a test server
+        "editor": false // Enables the in-game map editor tools
       },
-      "alert": "18+" // optional 18+ alert (also blocks underage players)
+      "alert": "18+" // Optional warning pop-up before joining the server
     }
   ]
 }
 ```
 
-
-### Generating Secret and Token
+#### Generating Secret and Token
 
 You **MUST** provide **unique**, **random** values for the `secret` and `token` fields of your config. It is **extremely dangerous** to leave these as default, as these values serve as authentication tokens for internal APIs and session cookies.
 
@@ -93,444 +110,526 @@ To generate new values for these parameters, you can use the following command:
 node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 ```
 
-### Setting up Database
+#### Setting up Database
 
-- Install MongoDB
-- Start `mongosh` or `mongo` from command line (you may need to go to your MongoDB installation path on windows to run the command)
-- Type `use your_database_name` to create database
-- Type `db.new_collection.insert({ some_key: "some_value" })` to initialize database
-- Type
-  ```javascript
-  db.createUser(
-    {
-      user: "your_username",
-      pwd: "your_password",
-      roles: [ { role: "readWrite", db: "your_database_name" } ]
-    }
-  )
-  ```
-  to create database user.
-- Type `quit()` to exit mongo
+1. Install MongoDB
+2. Start `mongosh` or `mongo` from command line.
+3. Type `use your_database_name` to create a database.
+4. Type `db.new_collection.insert({ some_key: "some_value" })` to initialize the database.
+5. Create a database user:
+   ```javascript
+   db.createUser({
+     user: "your_username",
+     pwd: "your_password",
+     roles: [ { role: "readWrite", db: "your_database_name" } ]
+   })
+   ```
+6. Type `quit()` to exit mongo.
 
-### Setting up OAuth keys
+#### Setting up OAuth keys
 
-Get OAuth keys for the authentication platform of your choice (github, google, twitter, facebook, vkontakte, discord).
+Get OAuth keys for the authentication platform of your choice (github, google, twitter, vkontakte, discord).
 
-#### Github
-
+**Github**
 - Go to https://github.com/settings/developers create new OAuth app.
-- Set authorization callback URL to `http://<your domain>/auth/github/callback` or `http://localhost:8090/auth/github/callback` for localhost server.
-- Add this to `oauth` field in your `config.json`
+- Set authorization callback URL to `http://<your domain>/auth/github/callback` or `http://localhost:8090/auth/github/callback` if using localhost server.
+- Add this to `oauth` field in your `config.json`:
+  ```json
+  "github": {
+    "clientID": "<your_client_id>",
+    "clientSecret": "<your_client_secret>"
+  }
+  ```
 
-```json
-"github": {
-  "clientID": "<your_client_id>",
-  "clientSecret": "<your_client_secret>"
-}
-```
-
-#### Twitter
-
+**Twitter**
 - Go to https://developer.twitter.com/en/apps create new app.
-- Set callback URL to `http://<your domain>/auth/twitter/callback` or `http://localhost:8090/auth/twitter/callback` for localhost server.
-- Add this to `oauth` field in your `config.json`
+- Set callback URL to `http://<your domain>/auth/twitter/callback` or `http://localhost:8090/auth/twitter/callback` if using localhost server.
+- Add this to `oauth` field in your `config.json`:
+  ```json
+  "twitter": {
+    "consumerKey": "<your_consumer_key>",
+    "consumerSecret": "<your_consumer_secret>"
+  }
+  ```
 
-```json
-"twitter": {
-  "consumerKey": "<your_consumer_key>",
-  "consumerSecret": "<your_consumer_secret>"
-}
-```
+**Google**
+- Go to https://console.developers.google.com/apis/dashboard.
+- Add Authorized JavaScript origins: `http://<your domain>` or `http://localhost:8090/`.
+- Add Authorized redirect URIs: `http://<your domain>/auth/google/callback` or `http://localhost:8090/auth/google/callback` if using localhost server.
+- Add this to `oauth` field in your `config.json`:
+  ```json
+  "google": {
+    "clientID": "<your_client_id>",
+    "clientSecret": "<your_client_secret>"
+  }
+  ```
 
-#### Google
+**VKontakte**
+- Go to https://vk.com/apps?act=manage and create a new app.
+- Set Authorized redirect URI to `http://<your domain>/auth/vkontakte/callback` or `http://localhost:8090/auth/vkontakte/callback` if using localhost server.
+- Add this to `oauth` field in your `config.json`:
+  ```json
+  "vkontakte": {
+    "clientID": "<your_app_id>",
+    "clientSecret": "<secure_key>"
+  }
+  ```
 
-- Go to https://console.developers.google.com/apis/dashboard create new project from dropdown at the top, go to credentials and create new entry.
-- Add to Authorized JavaScript origins `http://<your domain>` or `http://localhost:8090/` for localhost server.
-- Add to Authorized redirect URIs `http://<your domain>/auth/google/callback` or `http://localhost:8090/auth/google/callback` for localhost server.
-- Add this to `oauth` field in your `config.json`
+**Discord**
+- Go to https://discord.com/developers/applications/.
+- Navigate to the OAuth2 tab and add `http://<your domain>/auth/discord/callback` (or `http://localhost:8090/auth/discord/callback` for localhost server) as a redirect URI.
+- Add this to the `oauth` field in your `config.json`:
+  ```json
+  "discord": {
+    "clientID": "<your_client_id>",
+    "clientSecret": "<your_client_secret>"
+  }
+  ```
 
-```json
-"google": {
-  "clientID": "<your_client_id>",
-  "clientSecret": "<your_client_secret>"
-}
-```
+---
 
-#### Facebook
+### 4. Running the Server
 
-- Go to https://developers.facebook.com/apps/ add a new app.
-- Add "Facebook Login" product to your app
-- Enable "Web OAuth Login"
-- Add `https://<your domain>/auth/facebook/callback` to Valid OAuth Redirect URIs
-- Add this to `oauth` field in your `config.json` (You can find App ID and App Secret in Settings > Basic section)
-
-```json
-"facebook": {
-  "clientID": "<your_app_id>",
-  "clientSecret": "<your_app_secret>",
-  "graphApiVersion": "v3.1"
-}
-```
-
-#### VKontakte
-
-- Go to https://vk.com/apps?act=manage and create new app
-- Set Authorized redirect URI to `http://<your domain>/auth/vkontakte/callback` or `http://localhost:8090/auth/vkontakte/callback` for localhost server.
-- Add this to `oauth` field in your `config.json`
-
-```json
-"vkontakte": {
-  "clientID": "<your_app_id>",
-  "clientSecret": "<secure_key>"
-}
-```
-
-#### Discord
-
-- Go to https://discord.com/developers/applications/ and create a new app
-- Navigate to the OAuth2 tab
-- Add `http://<your domain>/auth/discord/callback` (or `http://localhost:8090/auth/discord/callback` for your localhost server) as a redirect URI
-- Navigate back to the General Information tab
-- Add this to the `oauth` field in your `config.json`
-
-```json
-"discord": {
-  "clientID": "<your_client_id>",
-  "clientSecret": "<your_client_secret>"
-}
-```
-
-
-## Running
-
-Production environment
+#### Production Environment
 
 ```bash
 npm run build
 npm start
 ```
 
-Adding/removing roles
+#### Roles Management & Admin CLI
 
+You can use the built-in `cli.js` to manage server roles directly from the command line:
 ```bash
 node cli.js --addrole <account_id> <role>   # roles: superadmin, admin, mod, dev
 node cli.js --removerole <account_id> <role>
 ```
+*Note: Other advanced commands (like `--ban`, `--mute`, `--clear-origins`) are also available in `cli.js` for moderating your game server.*
 
-To setup superadmin role use following command
+The Web Admin panel is accessible at `<base_url>/admin/` (requires `admin` or `superadmin` role).
+In-game Tools are accessible at `<base_url>/tools/` (only available in dev mode or when starting the game server with the `--tools` flag).
 
+#### Running Multiple Processes (Cluster Setup)
+
+For larger servers, you'll want to separate sub-servers into different processes instead of running them on a single thread. The `id` string (e.g., `main`, `safe`, `dev`) must match the `id` field defined inside the `servers: []` block of your `config.json`.
+
+**Method 1 (Recommended Standard Multi-Server)**
+This keeps your login and admin connected to your main server process, while hosting other sub-servers separately:
 ```bash
-node cli.js --addrole <your_account_id> superadmin
+npm start                       # Starts login, admin, and the "main" game server
+node pony-town.js --game safe   # Starts the safe server (in a separate terminal/screen)
+node pony-town.js --game dev    # Starts the dev server (in a separate terminal/screen)
 ```
 
-Admin panel is accessible at `<base_url>/admin/` (requires admin or superadmin role to access)
-Tools are accessible at `<base_url>/tools/` (only available in dev mode or when started with --tools flag)
-
-Starting as multiple processes
-
+**Method 2 (Fully Isolated Processes)**
+If you want to isolate everything including the login and admin standalone server:
 ```bash
-node pony-town.js --login                    # login server
-node pony-town.js --game main                # game server 1 ('main' has to match id from config.json)
-node pony-town.js --game safe                # game server 2 ('safe' has to match id from config.json)
-node pony-town.js --admin --standaloneadmin  # admin server
+node pony-town.js --login                    # Login server
+node pony-town.js --admin --standaloneadmin  # Admin server
+node pony-town.js --game main                # Main 18+ server
+node pony-town.js --game safe                # Safe server
+node pony-town.js --game dev                 # Dev server
 ```
 
-For these to work on the same URL, paths to game servers and admin server need to be bound to correct ports, using http proxy.
-
-It is recommended to run processes with larger memory pool for large user bases (especially admin and game processes), example:
-
+*Note: For large user bases, it's highly recommended to increase the memory allocation limit for the game processes:*
 ```bash
 node --max_old_space_size=8192 pony-town.js --game main
 ```
 
-Beta environment (with dev tools and in-development features)
+#### Beta Environment (In-Game Editor)
+If you want to run a live "Beta" testing server with built-in development tools, in-game debuggers, and the map editor enabled:
 
 ```bash
 npm run build-beta
 node pony-town.js --login --admin --game --tools --beta
 ```
+*Important Notes on Beta Features:*
+1. **Server Configuration:** To actually see developer-only map objects and use the map editor, ensure your `config.json` has `"test": true` and `"editor": true` enabled under the `flags` field for that server.
+2. **Build Dependency:** You **MUST** run `npm run build-beta` first before starting the node server with the `--beta` flag (e.g. `node pony-town.js --game dev --beta`).
+3. The `--beta` backend flag opens admin chat commands and cheat features. However, the heavy Map Editor user interface (in the browser) is *physically removed* from the JavaScript bundle during a standard `npm run build` to save bandwidth. Running a standard `npm run build` later on will overwrite and erase your beta UI tools.
 
-Running in development
+#### Development Environment
 
 ```bash
-npm run ts-watch    # terminal 1
-npm run wds         # terminal 2
+npm run ts-watch        # terminal 1
+npm run wds             # terminal 2
 npx gulp dev            # terminal 3
 npx gulp test           # terminal 4 (optional)
 ```
 
+#### Useful NPM & Gulp Scripts
+
+The `package.json` file contains several built-in scripts to aid your development and deployment workflows. Here are the most important ones:
+
+| Command | Description |
+|---|---|
+| `npm start` | Starts all servers (login, admin, and game main) simultaneously using the default config. |
+| `npm run startlocal` | Starts all servers passing the `--local` flag to enable loopback development mode. |
+| `npm run build` | Full production build of the frontend, maps, and tools. |
+| `npm run build-fast` | Runs a production build faster using parallel workers. |
+| `npm run build-beta` | Builds the frontend including debugging tools (for beta environments). |
+| `npm run wds` | Starts the Webpack Dev Server to compile and serve frontend changes in real-time (usually on port 8091). |
+| `npm run ts-watch` | Watches and live-compiles backend TypeScript (`src/ts`) files into JavaScript (`src/scripts`). |
+| `npx gulp dev --sprites` | Compiles image assets into usable sprite sheets. |
+| `npm run test-ts` | Executes all mocha `.spec.ts` unit tests directly using ts-node. |
+| `npm run lint` | Runs the TSLint checking to ensure code style compliance. |
+| `npm run sw` | Generates and minifies the PWA service worker files (`build/sw.js`). |
+
+---
+
+### 5. Service Worker / Progressive Web App (PWA)
+
+If you'd like your application to cache assets heavily or act as a Progressive Web App (Offline Mode), you must enable the Service Worker flag `"sw": true` in your `config.json`.
+
+After doing so, make sure to generate the service worker files via:
 ```bash
-npx gulp dev --sprites  # run with generation of sprite sheets (use src/ts/tools/trigger.txt to trigger sprite generation without restarting gulp)
-npx gulp dev --test     # run with tests
-npx gulp dev --coverage # run with tests and code coverage
+npm run sw
 ```
+*(This command runs `workbox generateSW` behind the scenes and then uglifies the result into your `build/` directory.)*
 
-## Apache Reverse Proxy
+---
 
-Enabling Necessary Apache Modules
+### 6. Deployment & Production
 
-```bash
-sudo a2enmod proxy proxy_http proxy_balancer lbmethod_byrequests
-```
+To run the server in a production environment, you must configure **Apache Reverse Proxy** and **PM2** to manage the Node.js *processes* automatically (autostart, logs, restarts) in the *background*. This repository includes an `ecosystem.config.js` configuration file for PM2.
 
-```bash
-sudo systemctl restart apache2
-```
+#### A. Configuring `config.json`
 
-Create Apache VirtualHost
+Before starting PM2 and the Proxy, you must adjust your `config.json` to separate the local ports for each *instance* and ensure the proxy headers are forwarded correctly:
 
+1. You must set proxy to `true`:
+   ```json
+   "proxy": true,
+   "host": "https://example.com/"
+   ```
+2. Change the port for the server with the ID `main` to `8092` and its local value:
+   ```json
+   "id": "main",
+   "port": 8092,
+   //...
+   "local": "localhost:8092",
+   ```
+3. Change the port for the server with the ID `safe` to `8093` and its local value:
+   ```json
+   "id": "safe",
+   "port": 8093,
+   //...
+   "local": "localhost:8093",
+   ```
+4. **Delete the entire `dev` server configuration block** (the one with `"id": "dev"`) from `config.json` because this configuration is only intended for *production*.
+
+#### B. Running PM2
+
+1. **Install PM2 globally**:
+   ```bash
+   npm install -g pm2
+   ```
+
+2. **Run the server cluster**:
+   Make sure you have built the server (`npm run build-fast`) first, then run:
+   ```bash
+   pm2 start ecosystem.config.js
+   ```
+
+3. **PM2 Autostart** (Automatically start on server *reboot*):
+   ```bash
+   pm2 startup
+   pm2 save
+   ```
+
+#### C. Apache Reverse Proxy Setup
+
+A reverse proxy must be set up to serve your game over standard HTTP/HTTPS ports (80 and 443) and route client WebSocket *requests* to the correct PM2 ports.
+
+1. **Install Apache2 & Enable Modules**:
+   ```bash
+   sudo apt update
+   sudo apt install apache2
+   sudo a2enmod proxy proxy_http proxy_balancer proxy_wstunnel lbmethod_byrequests headers rewrite ssl
+   sudo systemctl restart apache2
+   ```
+
+2. **Create an Apache VirtualHost configuration file** (e.g., `/etc/apache2/sites-available/nusatown.conf`):
 ```apacheconf
 <VirtualHost *:80>
     ServerName example.com
 
-    ProxyPreserveHost on
-    RewriteEngine on
-
-    ProxyPass / http://localhost:8090/
-    ProxyPassReverse / http://localhost:8090/
-
-    # Main Server
-    <Location /s00/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8090%{REQUEST_URI} [P]
-    </Location>
-
-    # Safe Server
-    <Location /s01/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8091%{REQUEST_URI} [P]
-    </Location>
+    RewriteEngine On
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
 </VirtualHost>
-```
 
-Create an Apache VirtualHost with SSL
-
-```apacheconf
 <VirtualHost *:443>
     ServerName example.com
 
-    ProxyPreserveHost on
-    RewriteEngine on
-    SSLEngine on
+    ProxyPreserveHost On
+    SSLEngine On
 
-    ProxyPass / http://localhost:8090/
-    ProxyPassReverse / http://localhost:8090/
+    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
 
-    # Main Server
-    <Location /s00/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8090%{REQUEST_URI} [P]
-    </Location>
+    SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1 +TLSv1.2 +TLSv1.3
+    SSLHonorCipherOrder on
 
-    # Safe Server
-    <Location /s01/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8091%{REQUEST_URI} [P]
-    </Location>
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
 
-    SSLCertificateFile /etc/ssl/server.crt
-    SSLCertificateKeyFile /etc/ssl/server.key
-    SSLProtocol +TLSv1.3
+    # Main Server WebSocket (wsPort: 10092)
+    ProxyPass "/s00/ws" "ws://localhost:10092/s00/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s00/ws" "ws://localhost:10092/s00/ws"
+
+    # Safe Server WebSocket (wsPort: 10093)
+    ProxyPass "/s01/ws" "ws://localhost:10093/s01/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s01/ws" "ws://localhost:10093/s01/ws"
+
+    # Admin WS - Standalone (wsPortAdmin: 10091)
+    ProxyPass "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin" flushpackets=on keepalive=On retry=0 timeout=3600 max=50 acquire=3000
+    ProxyPassReverse "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin"
+
+    # HTTP Fallback / Root Game (port login/main: 8090)
+    ProxyPass "/" "http://localhost:8090/" keepalive=On retry=0
+    ProxyPassReverse "/" "http://localhost:8090/"
+
+    ErrorLog ${APACHE_LOG_DIR}/nusatown_error.log
+    CustomLog ${APACHE_LOG_DIR}/nusatown_access.log combined
 </VirtualHost>
 ```
 
-To put these changes into effect, restart Apache
-
+3. **Enable the site configuration and restart Apache**:
 ```bash
+sudo a2ensite nusatown.conf
 sudo systemctl restart apache2
 ```
 
-Set proxy to true in config.json
+---
 
-```json
-"proxy": true
-```
+### 7. Customization & Advanced Modifications
 
-It is recommended to use Cloudflare.
-
-## Customization
-
-- `package.json` - settings for title and description of the website
+#### Customization Locations
+- `package.json` - title and description of the website
 - `assets/images` - logos and team avatars
 - `public/images` - additional logos
-- `public` - privacy policy and terms of service
 - `favicons` - icons
-- `src/ts/common/constants.ts` - global settings
-- `src/ts/server/maps/*` - maps configuration and setup
 - `src/ts/server/start.ts` - world setup
-- `src/ts/components/services/audio.ts` - adding/removing sound tracks
-- `src/ts/client/credits` - credits and contributors
 - `src/style/partials/_variables.scss` - page style configuration
 
-### Custom map introduction
+#### Essential Scripts & Tools (`src/ts/tools/`)
+The project contains several utility scripts for development (such as palette manipulations, font builders, and sprites generators). The most commonly used tool during asset modding is the sprite compiler:
+```bash
+npx gulp dev --sprites
+```
+This leverages `create-sprites.ts` to pack images from `assets-source` into optimized game sprites.
 
-- `src/ts/server/start.ts:35` - adding custom map to the world
-- `src/ts/server/maps/customMap.ts` - commented introduction to customizing maps
+#### Adding Assets (Items / Clothing)
+This game uses a *sprite sheet* system to render animations, objects, hair, and items.
 
+1. **Sprite Images**: Place new image files in the `assets-source` folder or modify existing `.png` files.
+2. **Sprite Generator**: Use `npx gulp dev --sprites` to compile images into sprite sheets.
+   > **Tip**: You can use a trigger file by touching `src/ts/tools/trigger.txt` to trigger automatic sprite generation if you are in dev mode.
+3. **Registration**: Ensure your new objects are added to initialization scripts like `src/ts/common/pony.ts` or `src/ts/common/entities.ts`.
 
-## Repo quirks and notes
+#### Modifying Gameplay & Interactive Entities
+Adding custom gameplay logic involves defining new objects (Entities) and how players interact with them (InteractActions, items, events).
 
-### `sprites.ts`
+**1. Adding Interactive Objects (Items / Events)**
+To create an object players can click or pick up (like food, gifts, or tools):
+- Open `src/ts/common/interfaces.ts` and add a new constant to `enum InteractAction` (e.g. `GiveMyCustomItem`).
+- Open `src/ts/common/entities.ts`. Register your new object (Doodad) with the interactive flag and your custom action:
+  ```typescript
+  export const myCustomTable = doodad(n('my-custom-table'), sprites.my_table_sprite, xOffset, yOffset, 0,
+      mixFlags(EntityFlags.Interactive),
+      base => base.interactRange = 5,
+      mixInteractAction(InteractAction.GiveMyCustomItem),
+      mixColliderRect(-13, -12, 26, 14)
+  );
+  ```
 
-Due to an issue with the build system, an old copy of `src/ts/generated/sprites.ts` is shipped with this repository. In order to prevent Git from seeing changes to this file from local builds and warning you about them when changing branches or pulling new changes, you can use the following command:
+**2. Handling the Interaction (Server-Side)**
+- Open `src/ts/server/playerUtils.ts` and locate the `interactWith()` function.
+- Add a new `case` for your `InteractAction` inside the switch block:
+  ```typescript
+  case InteractAction.GiveMyCustomItem: {
+      // Logic for handling the interaction.
+      // Example: Give a player a specific item.
+      const itemToGive = entities.myCustomItem.type;
+      holdItem(client.pony, itemToGive);
+      break;
+  }
+  ```
+
+**3. Handling Custom Player Actions (Animations/Emotes)**
+To add a new core action (e.g. "Dancing"):
+- **Declaration**: Open `src/ts/common/interfaces.ts` and add your action inside `enum Action`. Also, define a new `EntityState`.
+- **Client Side**: Add UI triggers or hotkeys in `src/ts/client/playerActions.ts` to fire `game.send(server => server.action(Action.YourNewAction))`. Provide visual feedback in `src/ts/client/ponyDraw.ts`.
+- **Server Side**: Handle the request in `src/ts/server/serverActions.ts`.
+
+#### Custom Map Creation
+To add a new map:
+1. Go to `src/ts/server/maps/`.
+2. Create a map creation script (or duplicate `customMap.ts`) and define tile structure, trees, objects.
+3. Open `src/ts/server/start.ts`, register, and initiate your new map class to the `world` instance.
+
+---
+
+### 8. Repo Quirks
+
+Due to an issue with the build system, an old copy of `src/ts/generated/sprites.ts` is shipped with this repository. To prevent Git from tracking local modifications on this file, use:
 
 ```bash
 git update-index --assume-unchanged src/ts/generated/sprites.ts
 ```
 
-Read more about it [here](https://stackoverflow.com/questions/1139762/ignore-files-that-have-already-been-committed-to-a-git-repository).
-
-### Adding assets
-
-1. Edit sprites (`assets-source` folder)
-2. Compile sprites (`npx gulp dev --sprites` or `npm run build-sprites`)
-3. Add relevant code
-4. (In some cases) compile sprites again
-
-## Project Modification (Advanced)
-
-This section is for developers who want to customize or add features to the project.
-
-### 1. Main Directory Structure
-
-* `src/` - Contains TypeScript (`.ts`) and SCSS (`.scss`) source code for client and server.
-  * `src/ts/client/` - Code for the web client (frontend), managing character rendering (canvas), user input (keyboard/mouse), websocket handlers, etc.
-  * `src/ts/server/` - Backend server code (NodeJS + Express + WebSockets). Manages authentication, APIs, *game loop*, maps, and socket communication to all clients.
-  * `src/ts/common/` - Code shared/used by both client and server (e.g., model definitions, constants, utils).
-  * `src/ts/components/` - Angular components for the web interface (UI modals, action bars, character editor, chat logs).
-  * `src/ts/graphics/` - WebGL and *canvas drawing* system to render the world, maps, and characters.
-* `assets/` - Place to store static files like CSS, Fonts, Images.
-* `assets-source/` - Source directory for graphics files (generally PSD or sprite-sheet files).
-* `public/` - Contains files exposed directly to the root (like general static images).
-
-### 2. Modifying Assets (Adding Items / Clothing)
-
-This game uses a *sprite sheet* system to render animations, objects, hair, and items.
-
-1. **Sprite Images**: Place new image files in the `assets-source` folder or modify existing `.png` files. Usually, for hair/clothing, you must draw all animation frames (standing, walking, trotting, sitting, etc.).
-2. **Sprite Generator**: Use the `gulp dev --sprites` script (or run `npm run build-sprites`) to convert images/individual images from the `assets-source` directory into the final *sprite sheet* file.
-   > **Tip**: You can use a trigger file by touching/changing the contents of `src/ts/tools/trigger.txt` to re-trigger automatic sprite generation if you are in dev mode.
-3. **Registering Assets to Code**:
-   After the sprite sheet is generated, ensure the object is added to the initialization script in `src/ts/common/pony.ts` or `src/ts/common/entities.ts` according to its designation (e.g.: `manespire`, `tails`, or `accessories`).
-
-### 3. Modifying Gameplay (Client & Server)
-
-The flow of adding an action (e.g.: "Dancing") generally involves 3 stages:
-
-#### A. Adding Action Declaration in Common
-* Open `src/ts/common/interfaces.ts` and add your action constant inside `enum Action`.
-* Define an `EntityState` (e.g., `PonyDancing`) that represents the character's status.
-
-#### B. Handle Action on Client
-* Add UI click detection or keyboard hotkeys in `src/ts/client/playerActions.ts`. Example:
-  ```typescript
-  export function danceAction(player: Pony, game: PonyTownGame) {
-      if (canPonyDance(player, game.map)) {
-          game.send(server => server.action(Action.Dance));
-          // change local state for instant feedback before getting server response
-          player.state = setPonyState(player.state, EntityState.PonyDancing);
-      }
-  }
-  ```
-* Provide visual response, like changing the frame to be rendered in `src/ts/client/ponyDraw.ts` if currently in `PonyDancing` state.
-
-#### C. Handle Action on Server
-* The server listens to client actions via WebSocket event handlers. Find the action handling logic, usually in `src/ts/server/serverActions.ts` or `src/ts/server/playerUtils.ts`.
-* Add logic checks (whether they can dance) on the server, and broadcast the status `Update` to all clients (other players on screen so they see your character dancing).
-
-### 4. Custom Map
-
-To add a new map:
-1. Open `src/ts/server/maps/`.
-2. Create a map creation script file (or duplicate `customMap.ts`). Here you define the tile structure, tree placement, houses, etc.
-3. Open `src/ts/server/start.ts` and find the line where the map is initialized (around line 35). Register and initiate your new map class to the `world` instance.
-
 ---
 
-<a name="bahasa-indonesia"></a>
-# Bahasa Indonesia
+### 9. In-Game Chat Commands
+Players and moderators can type special slash commands directly into the in-game chat to trigger specific behaviors.
+
+<details>
+<summary><b>Click to show/hide the full command list</b></summary>
+
+#### Player Commands
+* `/help` or `/h` or `/?` - Show help and shortcuts menu.
+* `/roll [[min-]max]` or `/rand` - Randomize a number in chat.
+* `/w <name>` - Whisper to a player.
+* `/r` - Reply to the last whisper.
+* `/e <id>` - Set permanent facial expression.
+* `/turn` - Turn head backwards.
+* `/boop` or `/)` - Perform a boop action.
+* `/drop` - Drop the held item (food/tool).
+* `/droptoy` - Drop the held toy.
+* `/gifts`, `/candies`, `/eggs`, `/clovers`, `/toys` - Show your collection scores for seasonal items.
+* `/unstuck` - Respawn at the map spawn point.
+* `/leave` - Instantly leave the game.
+* `/sit`, `/lie`, `/fly`, `/stand` - Perform basic stances.
+* `/blush`, `/love`, `/sleep`, `/cry` - Special animated actions.
+* `/swap <name>` - Quickly swap your character without going back to the lobby.
+
+#### House / Island Commands
+* `/savehouse` - Saves the current house furniture setup.
+* `/loadhouse` - Loads the saved house setup.
+* `/resethouse` - Resets the house back to its default state.
+* `/lockhouse` - Prevents guests from editing your house map.
+* `/unlockhouse` - Enables house editing by guests.
+* `/removetoolbox` / `/restoretoolbox` - Removes or restores the map-editing toolbox item from the island.
+
+#### Moderator & Admin Commands (Some require *beta* or *dev* mode)
+* `/goto <account_id>` - (Mod) Instantly go to a specific player's position.
+* `/tp <location_name> | <x> <y>` - (Mod) Teleport to a named map region or specific X/Y coordinate.
+* `/emotetest` - (Mod) Print all emotes.
+* `/announce <message>` - (Admin) Broadcast a global system announcement across the entire server.
+* `/time <hour>` - (Admin) Change the server day/night time (0-24).
+* `/togglerestore` - (Admin) Toggle automatic map terrain restoration.
+* `/resettiles` - (Admin) Revert all map tiles to the original loaded state.
+
+#### Superadmin Commands (Some require *beta* or *dev* mode)
+* `/update` / `/shutdown` - Signal game servers to prepare for a maintenance shutdown.
+* `/loadmap` / `/savemap` - Load or save the map instance state to local files.
+* Cheat and debug tools like `/season`, `/weather`, `/hold`, `/noclouds` and `/testparty` are undocumented here as they can only be executed in *non-production* environments (`--beta` or `DEVELOPMENT`). Please read `BETA_DEV_FEATURES.md`.
+</details>
+
+</details>
+
+<details open>
+<summary>Bahasa Indonesia</summary>
+
+<br>
 
 Sebuah game tentang pony-pony yang membangun kota.
 
-Ini adalah proyek Pony Town Custom Server dengan modifikasi nuansa Indonesia.
-Proyek ini memerlukan beberapa penyesuaian, silakan sesuaikan sendiri sesuai dengan kebutuhan Anda.
+Ini adalah proyek Pony Town Custom Server dengan modifikasi nuansa Indonesia. Proyek ini memerlukan beberapa penyesuaian, silakan sesuaikan sendiri sesuai dengan kebutuhan Anda.
 
-CATATAN: Ini adalah versi lama dari proyek ini, Pony Town tidak lagi menyediakan kode sumber dan telah menjadi sumber tertutup (closed source), Anda harus menggunakan repositori ini sebagai bahan pembelajaran.
+**CATATAN:** Ini adalah versi lama dari proyek ini. Pony Town tidak lagi menyediakan kode sumber dan telah menjadi sumber tertutup (closed source). **Jangan jadikan project ini sebagai media komersial.**
 
-## Persyaratan (Prerequisites)
+---
 
+### 1. Persyaratan Sistem
+
+* **Sistem Operasi**: Ubuntu 24.04.4 LTS (Sangat Direkomendasikan) atau Debian.
 * [Node.js](https://nodejs.org/en/download/) (versi 24 LTS)
 * MongoDB 7+: [tautan unduhan](https://www.mongodb.com/download-center/community) dan [petunjuk instalasi](https://docs.mongodb.com/manual/administration/install-community/)
-* Dependensi sistem untuk Canvas (Dibutuhkan untuk Ubuntu/Debian): `sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev pkg-config`
-* [ImageMagick](https://imagemagick.org/script/download.php#windows) (opsional, diperlukan untuk menghasilkan gif pratinjau dalam alat animasi)
+* Dependensi sistem untuk Canvas:
+  ```bash
+  sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev pkg-config
+  ```
 
-## Instalasi
+---
+
+### 2. Instalasi
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
-## Pengaturan (Setup)
+---
 
-Buat file `config.json` di folder root dengan konten berikut:
+### 3. Pengaturan Konfigurasi
+
+Untuk mulai mengkonfigurasi server Anda, cukup salin file template yang sudah disediakan:
+
+```bash
+cp config-template.json config.json
+```
+
+Kemudian edit file `config.json` sesuai dengan kebutuhan Anda. Di bawah ini adalah penjelasan dari fungsi setiap properti:
 
 ```json
 {
-  "title": "My custom server",
-  "discordLink": "<LINK_TO_DISCORD_INVITE>",
-  "contactDiscord": "your_contact_discord#0000", // opsional
-  "twitterLink": "<LINK_TO_TWITTER>",
-  "contactEmail": "your_contact_email",
-  "port": 8090,
-  "adminPort": 8091,
-  "host": "http://localhost:8090/",
-  "local": "localhost:8090",
-  "adminLocal": "localhost:8091",
-  "proxy": false,
-  "secret": "<some_random_string_here>",
-  "token": "<some_random_string_here>",
-  "db": "mongodb://<username>:<password>@localhost:27017/<database_name>", // gunakan nilai yang Anda gunakan saat menyiapkan database
-  "analytics": { // opsional google analytics
-    "trackingID": "<tracking_id>"
+  "title": "Nusa Town", // Nama server Anda yang ditampilkan di tab browser
+  "discordLink": "<LINK_TO_DISCORD_INVITE>", // Tautan ke server Discord Anda yang ditautkan pada footer
+  "twitterLink": "<LINK_TO_TWITTER>", // Tautan ke akun Twitter Anda
+  "contactEmail": "your_contact_email@example.com", // Email kontak dukungan (support email)
+  "contactDiscord": "your_contact_discord#0000", // Kontak Discord dukungan pengguna
+  "wdsUrl": "http://localhost:8091", // URL Webpack Dev Server untuk keperluan development lokal (npm run wds)
+  "sw": true, // Mengaktifkan fitur Service Worker (Progressive Web App / mode offline)
+  "noindex": false, // Jika true, menambahkan header X-Robots-Tag agar website tidak diindeks oleh Google / mesin pencari
+  "rollbar": { // Konfigurasi tracking error Rollbar (kosongkan jika tidak dipakai)
+    "environment": "",
+    "clientToken": "",
+    "serverToken": "",
+    "gulpToken": ""
   },
-  "facebookAppId": "<facebook_id>", // opsional facebook app link
-  "assetsPath": "<path_to_graphics_assets>", // opsional, for asset generation
-  "season": "spring", // opsional, defaults to spring; season for all servers, seasons are "spring", "summer", "autumn" and "winter"
-  "holiday": "none", // opsional, defaults to none; holiday for all servers, holidays are "none", "halloween", "christmas", "stpatricks" and "easter"
-  "oauth": {
-    "google": {
-      "clientID": "<CLIENT_ID_HERE>",
-      "clientSecret": "<CLIENT_SECRET_HERE>"
-    }
-    // entri oauth lainnya di sini
+  "analytics": { // Konfigurasi tracking Google Analytics (kosongkan jika tidak dipakai)
+    "trackingID": ""
   },
-  "servers": [
+  "port": 8090, // Port HTTP publik yang mendengarkan koneksi game server
+  "adminPort": 8091, // Port HTTP untuk server mandiri administrator (standalone admin server)
+  "wsPortAdmin": 10091, // Port WebSocket khusus untuk traffic administrator (standalone admin server).
+  "host": "http://localhost:8090/", // URL domain utama server. Ganti menjadi "https://example.com/" pada tahap production.
+  "local": "localhost:8090", // Pasangan IP:Port internal yang digunakan kluster untuk berkomunikasi (contoh: login mengirim auth ke game server)
+  "adminLocal": "localhost:8091", // IP:Port internal server admin
+  "proxy": false, // Ubah ke true jika Anda menggunakan Nginx/Apache/Cloudflare reverse proxy, agar header IP Client (X-Forwarded-For) diteruskan dengan aman
+  "secret": "<some_random_string_here>", // Kunci hash untuk sesi dan cookie Express (harus unik dan >= 16 karakter)
+  "token": "<some_random_string_here>", // Token rahasia internal untuk memvalidasi request API antar-kluster (harus unik dan >= 16 karakter)
+  "db": "mongodb://<username>:<password>@localhost:27017/<database_name>", // String koneksi database MongoDB
+  "oauth": { // Kunci-kunci pengaturan API sosial media login
+    "google": { ... },
+    "github": { ... },
+    "discord": { ... }
+  },
+  "season": "spring", // Musim default global ("spring", "summer", "autumn", "winter") untuk semua sub-server
+  "holiday": "none", // Liburan default global ("none", "halloween", "christmas", dll)
+  "servers": [ // Definisi setiap sub-server (game server) yang berjalan di kluster Anda
     {
-      "id": "dev",
-      "port": 8090,
-      "path": "/s00/ws",
-      "local": "localhost:8090",
-      "name": "Dev server",
-      "desc": "Development server",
-      "season": "summer", // opsional, defaults to summer, seasons are "spring", "summer", "autumn" and "winter"
-      "holiday": "none", // opsional, defaults to none, holidays are "none", "halloween", "christmas", "stpatricks" and "easter"
-      "flag": "test", // opsional system flag ("test", "star" or space separated list of country flags)
-      "flags": { // opsional feature flags
-        "test": true, // server uji coba
-        "editor": true // editor dalam game
+      "id": "main", // ID Server internal (dipakai oleh CLI/startup script `--game main`)
+      "port": 8090, // Port Express HTTP (REST API game map)
+      "wsPort": 10092, // Port khusus uWebSockets untuk lalu-lintas WebSocket secara direct
+      "path": "/s00/ws", // Rute WebSocket path yang dicocokkan dengan reverse proxy Apache/Nginx
+      "local": "localhost:8090", // Alamat host lokal yang dituju sistem ketika membroadcast info ke map ini
+      "name": "18+ Server", // Nama sub-server yang muncul di daftar pilihan lobi
+      "desc": "18+ speaking server", // Deskripsi singkat di lobi
+      "season": "summer", // Melakukan override / menimpa musim global
+      "holiday": "none", // Melakukan override / menimpa liburan global
+      "flag": "", // Label identifikasi sub-server tambahan di UI (contoh: 'test', 'ru')
+      "flags": { // Toggle fitur in-game pada sub-server
+        "test": false, // Menandai server dengan border "test"
+        "editor": false // Mengaktifkan alat modifikasi map (map editor) bagi user
       },
-      "alert": "18+" // opsional 18+ alert (also blocks underage players)
+      "alert": "18+" // Pop-up persetujuan opsional sebelum user memasuki server ini
     }
   ]
 }
 ```
 
-
-### Menghasilkan Secret dan Token
+#### Menghasilkan Secret dan Token
 
 Anda **HARUS** memberikan nilai yang **unik** dan **acak** untuk field `secret` dan `token` di konfigurasi Anda. Sangat berbahaya membiarkannya default, karena nilai ini berfungsi sebagai token otentikasi untuk API internal dan session cookie.
 
@@ -540,359 +639,414 @@ Untuk menghasilkan nilai baru, Anda dapat menggunakan perintah berikut di termin
 node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 ```
 
-### Menyiapkan Database
+#### Menyiapkan Database
 
-- Instal MongoDB
-- Mulai `mongosh` atau `mongo` dari baris perintah (Anda mungkin perlu pergi ke path instalasi MongoDB Anda di windows untuk menjalankan perintah)
-- Ketik `use your_database_name` untuk membuat database
-- Ketik `db.new_collection.insert({ some_key: "some_value" })` untuk menginisialisasi database
-- Ketik
-  ```javascript
-  db.createUser(
-    {
-      user: "your_username",
-      pwd: "your_password",
-      roles: [ { role: "readWrite", db: "your_database_name" } ]
-    }
-  )
-  ```
-  untuk membuat pengguna database.
-- Ketik `quit()` untuk keluar dari mongo
+1. Instal MongoDB
+2. Mulai `mongosh` atau `mongo` dari baris perintah.
+3. Ketik `use your_database_name` untuk membuat database.
+4. Ketik `db.new_collection.insert({ some_key: "some_value" })` untuk menginisialisasi database.
+5. Buat pengguna database:
+   ```javascript
+   db.createUser({
+     user: "your_username",
+     pwd: "your_password",
+     roles: [ { role: "readWrite", db: "your_database_name" } ]
+   })
+   ```
+6. Ketik `quit()` untuk keluar.
 
-### Menyiapkan kunci OAuth
+#### Menyiapkan kunci OAuth
 
-Dapatkan kunci OAuth untuk platform otentikasi pilihan Anda (github, google, twitter, facebook, vkontakte, discord).
+Dapatkan kunci OAuth untuk platform pilihan Anda (github, google, twitter, vkontakte, discord).
 
-#### Github
-
+**Github**
 - Buka https://github.com/settings/developers buat aplikasi OAuth baru.
 - Atur authorization callback URL ke `http://<domain Anda>/auth/github/callback` atau `http://localhost:8090/auth/github/callback` untuk server localhost.
-- Tambahkan ini ke field `oauth` di `config.json` Anda
+- Tambahkan ini ke field `oauth` di `config.json` Anda:
+  ```json
+  "github": {
+    "clientID": "<client_id_Anda>",
+    "clientSecret": "<client_secret_Anda>"
+  }
+  ```
 
-```json
-"github": {
-  "clientID": "<client_id_Anda>",
-  "clientSecret": "<client_secret_Anda>"
-}
-```
-
-#### Twitter
-
+**Twitter**
 - Buka https://developer.twitter.com/en/apps buat aplikasi baru.
 - Atur callback URL ke `http://<domain Anda>/auth/twitter/callback` atau `http://localhost:8090/auth/twitter/callback` untuk server localhost.
-- Tambahkan ini ke field `oauth` di `config.json` Anda
+- Tambahkan ini ke field `oauth` di `config.json` Anda:
+  ```json
+  "twitter": {
+    "consumerKey": "<consumer_key_Anda>",
+    "consumerSecret": "<consumer_secret_Anda>"
+  }
+  ```
 
-```json
-"twitter": {
-  "consumerKey": "<consumer_key_Anda>",
-  "consumerSecret": "<consumer_secret_Anda>"
-}
-```
-
-#### Google
-
-- Buka https://console.developers.google.com/apis/dashboard buat proyek baru dari dropdown di bagian atas, buka credentials (kredensial) dan buat entri baru.
+**Google**
+- Buka https://console.developers.google.com/apis/dashboard buka credentials (kredensial) dan buat entri baru.
 - Tambahkan ke Authorized JavaScript origins `http://<domain Anda>` atau `http://localhost:8090/` untuk server localhost.
 - Tambahkan ke Authorized redirect URIs `http://<domain Anda>/auth/google/callback` atau `http://localhost:8090/auth/google/callback` untuk server localhost.
-- Tambahkan ini ke field `oauth` di `config.json` Anda
+- Tambahkan ini ke field `oauth` di `config.json` Anda:
+  ```json
+  "google": {
+    "clientID": "<client_id_Anda>",
+    "clientSecret": "<client_secret_Anda>"
+  }
+  ```
 
-```json
-"google": {
-  "clientID": "<client_id_Anda>",
-  "clientSecret": "<client_secret_Anda>"
-}
-```
-
-#### Facebook
-
-- Buka https://developers.facebook.com/apps/ tambahkan aplikasi baru.
-- Tambahkan produk "Facebook Login" ke aplikasi Anda
-- Aktifkan "Web OAuth Login"
-- Tambahkan `https://<domain Anda>/auth/facebook/callback` ke Valid OAuth Redirect URIs
-- Tambahkan ini ke field `oauth` di `config.json` Anda (Anda dapat menemukan App ID dan App Secret di bagian Settings > Basic)
-
-```json
-"facebook": {
-  "clientID": "<app_id_Anda>",
-  "clientSecret": "<app_secret_Anda>",
-  "graphApiVersion": "v3.1"
-}
-```
-
-#### VKontakte
-
-- Buka https://vk.com/apps?act=manage dan buat aplikasi baru
+**VKontakte**
+- Buka https://vk.com/apps?act=manage dan buat aplikasi baru.
 - Atur Authorized redirect URI ke `http://<domain Anda>/auth/vkontakte/callback` atau `http://localhost:8090/auth/vkontakte/callback` untuk server localhost.
-- Tambahkan ini ke field `oauth` di `config.json` Anda
+- Tambahkan ini ke field `oauth` di `config.json` Anda:
+  ```json
+  "vkontakte": {
+    "clientID": "<app_id_Anda>",
+    "clientSecret": "<secure_key_Anda>"
+  }
+  ```
 
-```json
-"vkontakte": {
-  "clientID": "<app_id_Anda>",
-  "clientSecret": "<secure_key_Anda>"
-}
-```
+**Discord**
+- Buka https://discord.com/developers/applications/ dan buat aplikasi baru.
+- Navigasi ke tab OAuth2 dan tambahkan `http://<domain Anda>/auth/discord/callback` (atau `http://localhost:8090/auth/discord/callback` untuk server localhost Anda) sebagai redirect URI.
+- Tambahkan ini ke field `oauth` di `config.json` Anda:
+  ```json
+  "discord": {
+    "clientID": "<client_id_Anda>",
+    "clientSecret": "<client_secret_Anda>"
+  }
+  ```
 
-#### Discord
+---
 
-- Buka https://discord.com/developers/applications/ dan buat aplikasi baru
-- Navigasi ke tab OAuth2
-- Tambahkan `http://<domain Anda>/auth/discord/callback` (atau `http://localhost:8090/auth/discord/callback` untuk server localhost Anda) sebagai redirect URI
-- Navigasi kembali ke tab General Information
-- Tambahkan ini ke field `oauth` di `config.json` Anda
+### 4. Menjalankan Server
 
-```json
-"discord": {
-  "clientID": "<client_id_Anda>",
-  "clientSecret": "<client_secret_Anda>"
-}
-```
-
-
-## Menjalankan (Running)
-
-Lingkungan produksi (Production environment)
+#### Lingkungan Produksi (Production)
 
 ```bash
 npm run build
 npm start
 ```
 
-Menambahkan/menghapus peran (roles)
+#### Pengaturan Peran (Roles) & Admin CLI
 
+Anda dapat menggunakan command internal `cli.js` untuk mengatur administrasi user langsung dari terminal:
 ```bash
 node cli.js --addrole <account_id> <role>   # peran: superadmin, admin, mod, dev
 node cli.js --removerole <account_id> <role>
 ```
+*Catatan: Perintah manajemen lainnya (seperti `--ban`, `--mute`, `--clear-origins`) juga ada pada script `cli.js` untuk memoderasi server game Anda.*
 
-Untuk mengatur peran superadmin gunakan perintah berikut
+Panel admin web dapat diakses pada URL `<base_url>/admin/` (membutuhkan peran admin / superadmin pada akun Anda).
+Berbagai In-game Tools dapat diakses di `<base_url>/tools/` (tersedia saat mode dev atau men-deploy server dengan menggunakan flag `--tools`).
 
+#### Memulai Kluster / Multi-Process (Multi-Server)
+
+Untuk basis server yang luas, Anda diwajibkan menjalankan masing-masing sub-server pada *process* (terminal) yang terpisah. Nama identifikasi server seperti `main`, `safe`, dan `dev` diambil dari properti `id` di dalam pengaturan `servers: []` pada file `config.json` Anda.
+
+**Metode 1 (Standard Multi-Server)**
+Metode ini adalah cara tercepat. Anda menjalankan server login, admin, dan game `main` sekaligus di satu tempat, kemudian menjalankan *sub-server* lainnya di background (atau menggunakan terminal/screen berbeda):
 ```bash
-node cli.js --addrole <your_account_id> superadmin
+npm start                       # Memulai server login, admin, dan "main" game secara bersamaan
+node pony-town.js --game safe   # Memulai server "safe" (di terminal terpisah)
+node pony-town.js --game dev    # Memulai server "dev" (di terminal terpisah)
 ```
 
-Panel admin dapat diakses di `<base_url>/admin/` (memerlukan peran admin atau superadmin untuk mengakses)
-Alat-alat (Tools) dapat diakses di `<base_url>/tools/` (hanya tersedia dalam mode dev atau saat dimulai dengan flag --tools)
-
-Memulai sebagai beberapa proses
-
+**Metode 2 (Fully Isolated Process / Mandiri)**
+Metode ini benar-benar memisahkan semuanya, termasuk memisah server login dengan server admin standalone.
 ```bash
-node pony-town.js --login                    # login server
-node pony-town.js --game main                # game server 1 ('main' harus cocok dengan id dari config.json)
-node pony-town.js --game safe                # game server 2 ('safe' harus cocok dengan id dari config.json)
-node pony-town.js --admin --standaloneadmin  # admin server
+node pony-town.js --login                    # Menjalankan server Login
+node pony-town.js --admin --standaloneadmin  # Menjalankan server Admin
+node pony-town.js --game main                # Menjalankan server Main 18+
+node pony-town.js --game safe                # Menjalankan server Safe
+node pony-town.js --game dev                 # Menjalankan server Dev
 ```
 
-Agar ini berfungsi pada URL yang sama, jalur ke server game dan server admin perlu diikat ke port yang benar, menggunakan http proxy.
-
-Disarankan untuk menjalankan proses dengan pool memori yang lebih besar untuk basis pengguna yang besar (terutama proses admin dan game), contoh:
-
+*Catatan: Jika server Anda dimainkan oleh banyak pengguna, Anda disarankan mengalokasikan RAM yang lebih besar saat men-deploy Node:*
 ```bash
 node --max_old_space_size=8192 pony-town.js --game main
 ```
 
-Lingkungan Beta (dengan alat dev dan fitur dalam pengembangan)
+#### Lingkungan Beta (In-Game Editor / Alat Dev)
+Jika Anda ingin menjalankan server "Beta" secara live dengan alat *developer*, *debugger* dalam game, serta Map Editor yang menyala:
 
 ```bash
 npm run build-beta
 node pony-town.js --login --admin --game --tools --beta
 ```
 
-Berjalan dalam pengembangan (development)
+*Catatan Penting mengenai Fitur Beta:*
+1. **Konfigurasi Server:** Agar objek tes (seperti item yang bisa dipungut) dan alat map editor in-game benar-benar diizinkan, pastikan file `config.json` Anda memiliki `"test": true` dan `"editor": true` di dalam properti `flags` server yang dituju.
+2. **Ketergantungan Build:** Anda **WAJIB** melakukan kompilasi klien dengan `npm run build-beta` sebelum menaikkan server node dengan akhiran `--beta` (misal: `node pony-town.js --game dev --beta`).
+3. Menjalankan `--beta` di backend akan membuka cheat command admin. Namun, UI Map Editor di browser akan terhapus jika Anda mengompilasi sistem menggunakan `npm run build` (build standar tanpa beta) karena sistem otomatis membersihkan kode berat untuk production. **Mengeksekusi `npm run build` standar setelahnya akan membuat UI Beta Anda hilang kembali.**
+
+#### Lingkungan Pengembangan (Development)
 
 ```bash
-npm run ts-watch    # terminal 1
-npm run wds         # terminal 2
+npm run ts-watch        # terminal 1
+npm run wds             # terminal 2
 npx gulp dev            # terminal 3
 npx gulp test           # terminal 4 (opsional)
 ```
 
+#### Skrip NPM & Gulp Penting
+
+File `package.json` menyertakan berbagai skrip bawaan untuk mempermudah alur kerja (workflow). Berikut adalah perintah utama yang sering digunakan:
+
+| Perintah | Fungsi |
+|---|---|
+| `npm start` | Memulai semua server sekaligus (login, admin, dan game main) menggunakan konfigurasi default. |
+| `npm run startlocal` | Memulai semua server dengan flag `--local` (mode development lokal/loopback). |
+| `npm run build` | Melakukan proses build penuh untuk frontend, peta, dan alat secara production. |
+| `npm run build-fast` | Menjalankan build secara paralel agar jauh lebih cepat. |
+| `npm run build-beta` | Melakukan build aplikasi dengan environment beta dan menyertakan tools inspector. |
+| `npm run wds` | Memulai Webpack Dev Server untuk kompilasi dan reload frontend secara langsung (biasanya pada port 8091). |
+| `npm run ts-watch` | Menjalankan compiler Typescript (mengawasi `src/ts`) ke JavaScript (`src/scripts`) secara real-time. |
+| `npx gulp dev --sprites` | Mengompilasi dan mengompres aset gambar menjadi sprite sheets yang dipakai game. |
+| `npm run test-ts` | Menjalankan seluruh berkas unit test Mocha (`.spec.ts`) secara langsung memakai ts-node. |
+| `npm run lint` | Memeriksa ketaatan standar gaya penulisan kode menggunakan TSLint. |
+| `npm run sw` | Men-generate dan mengecilkan file service worker PWA ke `build/sw.js`. |
+
+---
+
+### 5. Service Worker / Progressive Web App (PWA)
+
+Jika Anda ingin situs game menyimpan *cache asset* secara agresif dan bertindak seperti aplikasi lokal (Progressive Web App / Offline mode), pastikan fitur ini aktif dengan mengatur nilai `"sw": true` di `config.json`.
+
+Kemudian, Anda harus menjalankan skrip NPM berikut untuk men-generate logic file service worker tersebut:
 ```bash
-npx gulp dev --sprites  # jalankan dengan generasi lembar sprite (gunakan src/ts/tools/trigger.txt untuk memicu generasi sprite tanpa me-restart gulp)
-npx gulp dev --test     # jalankan dengan tes
-npx gulp dev --coverage # jalankan dengan tes dan cakupan kode (code coverage)
+npm run sw
 ```
+*(Perintah ini akan memanggil `workbox generateSW` dan mengkompres filenya menuju folder `build/`.)*
 
-## Apache Reverse Proxy
+---
 
-Mengaktifkan Modul Apache yang Diperlukan
+### 6. Deployment & Production
 
-```bash
-sudo a2enmod proxy proxy_http proxy_balancer lbmethod_byrequests
-```
+Untuk menjalankan server di lingkungan produksi, Anda wajib mengkonfigurasi **Apache Reverse Proxy** dan **PM2** guna mengelola *process* Node.js secara otomatis (autostart, logs, restart) di *background*. Repositori ini telah dilengkapi dengan file `ecosystem.config.js` untuk PM2.
 
-```bash
-sudo systemctl restart apache2
-```
+#### A. Konfigurasi `config.json`
 
-Buat Apache VirtualHost
+Sebelum memulai PM2 dan Proxy, Anda wajib melakukan penyesuaian di `config.json` untuk memisahkan port lokal tiap *instance* serta memastikan header proxy diteruskan:
 
+1. Wajib atur proxy ke `true`:
+   ```json
+   "proxy": true,
+   "host": "https://example.com/"
+   ```
+2. Ganti port pada server yang ber-ID `main` menjadi `8092` beserta nilai lokalnya:
+   ```json
+   "id": "main",
+   "port": 8092,
+   //...
+   "local": "localhost:8092",
+   ```
+3. Ganti port pada server yang ber-ID `safe` menjadi `8093` beserta nilai lokalnya:
+   ```json
+   "id": "safe",
+   "port": 8093,
+   //...
+   "local": "localhost:8093",
+   ```
+4. **Hapus blok konfigurasi server `dev`** (yang memiliki `"id": "dev"`) seluruhnya dari `config.json` karena konfigurasi ini hanya ditujukan untuk *production*.
+
+#### B. Menjalankan PM2
+
+1. **Instal PM2 secara global**:
+   ```bash
+   npm install -g pm2
+   ```
+
+2. **Jalankan kluster server**:
+   Pastikan Anda telah melakukan *build* server (`npm run build-fast`), kemudian jalankan:
+   ```bash
+   pm2 start ecosystem.config.js
+   ```
+
+3. **Autostart PM2** (agar berjalan otomatis saat server *reboot*):
+   ```bash
+   pm2 startup
+   pm2 save
+   ```
+
+#### C. Konfigurasi Apache Reverse Proxy
+
+Reverse proxy wajib dipasang untuk melayani game Anda di port HTTP/HTTPS standar (80 dan 443) serta merutekan *request* WebSockets klien ke port PM2 yang benar.
+
+1. **Instal Apache2 & Aktifkan Modul**:
+   ```bash
+   sudo apt update
+   sudo apt install apache2
+   sudo a2enmod proxy proxy_http proxy_balancer proxy_wstunnel lbmethod_byrequests headers rewrite ssl
+   sudo systemctl restart apache2
+   ```
+
+2. **Buat file VirtualHost Apache** (contoh: `/etc/apache2/sites-available/nusatown.conf`):
 ```apacheconf
 <VirtualHost *:80>
     ServerName example.com
 
-    ProxyPreserveHost on
-    RewriteEngine on
-
-    ProxyPass / http://localhost:8090/
-    ProxyPassReverse / http://localhost:8090/
-
-    # Main Server
-    <Location /s00/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8090%{REQUEST_URI} [P]
-    </Location>
-
-    # Safe Server
-    <Location /s01/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8091%{REQUEST_URI} [P]
-    </Location>
+    RewriteEngine On
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
 </VirtualHost>
-```
 
-Buat Apache VirtualHost dengan SSL
-
-```apacheconf
 <VirtualHost *:443>
     ServerName example.com
 
-    ProxyPreserveHost on
-    RewriteEngine on
-    SSLEngine on
+    ProxyPreserveHost On
+    SSLEngine On
 
-    ProxyPass / http://localhost:8090/
-    ProxyPassReverse / http://localhost:8090/
+    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
 
-    # Main Server
-    <Location /s00/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8090%{REQUEST_URI} [P]
-    </Location>
+    SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1 +TLSv1.2 +TLSv1.3
+    SSLHonorCipherOrder on
 
-    # Safe Server
-    <Location /s01/ws>
-        RewriteCond %{HTTP:UPGRADE} ^websocket$ [NC]
-        RewriteCond %{HTTP:CONNECTION} ^upgrade$ [NC]
-        RewriteRule .* ws://localhost:8091%{REQUEST_URI} [P]
-    </Location>
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
 
-    SSLCertificateFile /etc/ssl/server.crt
-    SSLCertificateKeyFile /etc/ssl/server.key
-    SSLProtocol +TLSv1.3
+    # Main Server WebSocket (wsPort: 10092)
+    ProxyPass "/s00/ws" "ws://localhost:10092/s00/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s00/ws" "ws://localhost:10092/s00/ws"
+
+    # Safe Server WebSocket (wsPort: 10093)
+    ProxyPass "/s01/ws" "ws://localhost:10093/s01/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s01/ws" "ws://localhost:10093/s01/ws"
+
+    # Admin WS - Standalone (wsPortAdmin: 10091)
+    ProxyPass "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin" flushpackets=on keepalive=On retry=0 timeout=3600 max=50 acquire=3000
+    ProxyPassReverse "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin"
+
+    # HTTP Fallback / Root Game (port login/main: 8090)
+    ProxyPass "/" "http://localhost:8090/" keepalive=On retry=0
+    ProxyPassReverse "/" "http://localhost:8090/"
+
+    ErrorLog ${APACHE_LOG_DIR}/nusatown_error.log
+    CustomLog ${APACHE_LOG_DIR}/nusatown_access.log combined
 </VirtualHost>
 ```
 
-Untuk menerapkan perubahan ini, mulai ulang (restart) Apache
-
+3. **Aktifkan konfigurasi dan restart Apache**:
 ```bash
+sudo a2ensite nusatown.conf
 sudo systemctl restart apache2
 ```
 
-Atur proxy ke true di config.json
+---
 
-```json
-"proxy": true
+### 7. Modifikasi Lanjutan (Advanced Customization)
+
+#### Struktur Direktori Utama
+* `src/ts/client/` - Kode frontend/web (merender canvas, input pengguna, dsb).
+* `src/ts/server/` - Kode backend server NodeJS.
+* `src/ts/common/` - Kode sistem global yang dibagikan ke server maupun client.
+* `assets-source/` - Folder penyimpanan file grafis yang belum di-compile (PSD/Sprite sheets).
+
+#### Peralatan Pengembangan Tambahan (`src/ts/tools/`)
+Terdapat beberapa skrip utilitas seperti file generator font dan modifikasi palet. Salah satu utilitas paling krusial untuk para modder adalah compiler sprite, yang dapat dijalankan lewat perintah:
+```bash
+npx gulp dev --sprites
 ```
+Alat ini memanggil skrip internal seperti `create-sprites.ts` untuk memproses seluruh gambar (PNG, PSD) yang ada pada direktori `assets-source` menjadi sprite game yang dioptimasi untuk WebGL canvas.
 
-Disarankan untuk menggunakan Cloudflare.
+#### Menambahkan Asset (Pakaian / Objek Baru)
+Sistem dalam game ini bekerja berdasarkan *sprite sheets*.
+1. Tempatkan dan edit gambar animasi di folder `assets-source`.
+2. Gunakan `npx gulp dev --sprites` untuk men-generate gambar tersebut ke dalam cache sprite sheets. Anda bisa menambahkan file `src/ts/tools/trigger.txt` untuk re-trigger generasi otomatis.
+3. Daftarkan kode objek di script sistem seperti `src/ts/common/pony.ts`.
 
-## Kustomisasi
+#### Modifikasi Gameplay & Entitas Interaktif
+Untuk memodifikasi logika game, menambah event, atau membuat objek map yang dapat berinteraksi dengan player (contoh: meja tempat mengambil makanan), ikuti panduan berikut:
 
-- `package.json` - pengaturan untuk judul dan deskripsi situs web
-- `assets/images` - logo dan avatar tim
-- `public/images` - logo tambahan
-- `public` - kebijakan privasi dan persyaratan layanan
-- `favicons` - ikon
-- `src/ts/common/constants.ts` - pengaturan global
-- `src/ts/server/maps/*` - konfigurasi dan pengaturan peta
-- `src/ts/server/start.ts` - pengaturan dunia
-- `src/ts/components/services/audio.ts` - menambah/menghapus trek suara
-- `src/ts/client/credits` - kredit dan kontributor
-- `src/style/partials/_variables.scss` - konfigurasi gaya halaman
+**1. Membuat Objek Interaktif (Item / Event Map)**
+- Buka `src/ts/common/interfaces.ts` dan tambahkan konstanta baru ke dalam `enum InteractAction` (misal: `GiveMyCustomItem`).
+- Buka `src/ts/common/entities.ts`. Daftarkan objek baru Anda sebagai *Doodad* dan beri flag interaktif berserta aksinya:
+  ```typescript
+  export const myCustomTable = doodad(n('my-custom-table'), sprites.my_table_sprite, xOffset, yOffset, 0,
+      mixFlags(EntityFlags.Interactive),       // Mengizinkan objek untuk diklik
+      base => base.interactRange = 5,          // Radius interaksi player
+      mixInteractAction(InteractAction.GiveMyCustomItem), // Menyematkan aksi ke objek ini
+      mixColliderRect(-13, -12, 26, 14)        // Hitbox tabrakan objek
+  );
+  ```
 
-### Pengenalan peta kustom
+**2. Menjalankan Efek Interaksi (Sisi Server)**
+- Buka `src/ts/server/playerUtils.ts` dan cari fungsi `interactWith()`.
+- Tambahkan blok `case` baru untuk tipe `InteractAction` Anda di dalam `switch`:
+  ```typescript
+  case InteractAction.GiveMyCustomItem: {
+      // Logika game setelah objek diklik, contohnya memberikan player item:
+      const itemToGive = entities.myCustomItem.type;
+      holdItem(client.pony, itemToGive);
+      break;
+  }
+  ```
 
-- `src/ts/server/start.ts:35` - menambahkan peta kustom ke dunia
-- `src/ts/server/maps/customMap.ts` - pengenalan dengan komentar untuk menyesuaikan peta
+**3. Modifikasi Animasi (Penambahan Aksi Player)**
+Untuk menambah aksi inti baru seperti "Berdansa":
+- **Deklarasi**: Buka `src/ts/common/interfaces.ts` dan tambahkan enum konstanta aksi Anda pada `enum Action` dan definisikan status karakter (`EntityState`).
+- **Sisi Klien**: Tambahkan kontrol klik UI / hotkey di `src/ts/client/playerActions.ts` yang akan mengeksekusi `game.send(server => server.action(Action.YourNewAction))`. Siapkan render frame baru di `ponyDraw.ts`.
+- **Sisi Server**: Validasi permintaan aksi di `src/ts/server/serverActions.ts` dan sebarkan update via websocket ke pemain lain yang ada di sekitar layar.
 
+#### Membuat Peta (Custom Map)
+1. Buka `src/ts/server/maps/`.
+2. Buat script peta baru atau salin `customMap.ts`. Di sini Anda bisa mendesain peletakan objek, rumah, tanah, air, dll.
+3. Daftarkan instance class map yang baru ke file core `src/ts/server/start.ts`.
 
+---
 
-## Catatan dan keanehan Repositori (Repo quirks and notes)
+### 8. Repo Quirks
 
-### `sprites.ts`
-
-Karena adanya masalah dengan sistem build, salinan lama `src/ts/generated/sprites.ts` disertakan dengan repositori ini. Untuk mencegah Git melihat perubahan pada file ini dari build lokal dan memperingatkan Anda tentang perubahan tersebut saat mengubah cabang atau menarik perubahan baru, Anda dapat menggunakan perintah berikut:
+Karena kendala sistem build, ada duplikasi file cache kuno di repositori ini. Untuk mencegah git mendeteksi perubahan pada `sprites.ts` yang di-generate oleh sistem lokal Anda, gunakan perintah ini:
 
 ```bash
 git update-index --assume-unchanged src/ts/generated/sprites.ts
 ```
 
-Baca selengkapnya tentang hal ini [di sini](https://stackoverflow.com/questions/1139762/ignore-files-that-have-already-been-committed-to-a-git-repository).
+---
 
-### Menambahkan Aset (Adding assets)
+### 9. Perintah Obrolan (In-Game Chat Commands)
+Pemain maupun pengawas (moderator) dapat mengetik perintah tertentu secara langsung ke dalam kolom *chat* di dalam permainan untuk memicu fungsi khusus.
 
-1. Edit sprite (folder `assets-source`)
-2. Kompilasi sprite (`npx gulp dev --sprites` atau `npm run build-sprites`)
-3. Tambahkan kode yang relevan
-4. (Dalam beberapa kasus) kompilasi sprite lagi
+<details>
+<summary><b>Klik untuk menampilkan/menyembunyikan daftar perintah</b></summary>
 
-## Modifikasi Project (Tingkat Lanjut)
+#### Perintah Umum Pemain
+* `/help` atau `/h` atau `/?` - Membuka menu bantuan (help).
+* `/roll [[min-]max]` atau `/rand` - Mengundi angka secara acak di chat.
+* `/w <name>` - Berbisik (whisper) kepada pemain tertentu.
+* `/r` - Membalas bisikan terakhir.
+* `/e <id>` - Membekukan ekspresi wajah tertentu.
+* `/turn` - Menengok ke belakang.
+* `/boop` atau `/)` - Melakukan tindakan boop.
+* `/drop` - Menjatuhkan benda/peralatan yang sedang digigit.
+* `/droptoy` - Menjatuhkan mainan.
+* `/gifts`, `/candies`, `/eggs`, `/clovers`, `/toys` - Memeriksa skor / jumlah koleksi barang musiman.
+* `/unstuck` - Respawn ulang ke titik awal (spawn point).
+* `/leave` - Keluar dari game ke lobi secara instan.
+* `/sit`, `/lie`, `/fly`, `/stand` - Melakukan pose dasar (duduk, rebahan, terbang, berdiri).
+* `/blush`, `/love`, `/sleep`, `/cry` - Menyalakan animasi aksi spesial (tersipu, cinta, tidur, menangis).
+* `/swap <nama_karakter>` - Mengganti karakter secara cepat tanpa harus kembali ke lobi.
 
-Bagian ini diperuntukkan bagi pengembang yang ingin melakukan penyesuaian (kustomisasi) atau menambahkan fitur pada project.
+#### Perintah Rumah / Pulau Pribadi
+* `/savehouse` - Menyimpan pengaturan letak barang (furniture) di rumah saat ini.
+* `/loadhouse` - Memuat (load) pengaturan letak rumah yang sudah disimpan sebelumnya.
+* `/resethouse` - Mengembalikan map pulau/rumah ke kondisi asli kosong.
+* `/lockhouse` - Mengunci pulau agar tamu (guest) tidak dapat merubah barang.
+* `/unlockhouse` - Mengizinkan tamu untuk merubah barang.
+* `/removetoolbox` / `/restoretoolbox` - Menghilangkan atau memunculkan kembali alat pertukangan map dari pulau.
 
-### 1. Struktur Direktori Utama
+#### Perintah Moderator & Administrator (Beberapa membutuhkan mode *beta* atau *dev*)
+* `/goto <account_id>` - (Mod) Pindah / teleportasi instan ke titik lokasi pemain tersebut berada.
+* `/tp <nama_lokasi> | <x> <y>` - (Mod) Teleportasi ke zona peta tertentu atau menggunakan koordinat pasti X dan Y.
+* `/emotetest` - (Mod) Mencetak (print) seluruh koleksi emote karakter.
+* `/announce <pesan>` - (Admin) Mengirimkan pengumuman server global ke seluruh pemain yang sedang online.
+* `/time <jam>` - (Admin) Memutar jam (0-24) untuk mengatur siang/malam di server saat ini.
+* `/togglerestore` - (Admin) Menyalakan/mematikan restorasi otomatis dataran (terrain) rumput map.
+* `/resettiles` - (Admin) Menghapus perubahan pemain pada map dan mengembalikan kondisi tanah (tiles) seperti asli.
 
-* `src/` - Berisi source code TypeScript (`.ts`) dan SCSS (`.scss`) untuk client dan server.
-  * `src/ts/client/` - Kode untuk web client (frontend), mengatur rendering karakter (canvas), input user (keyboard/mouse), handlers websocket, dll.
-  * `src/ts/server/` - Kode backend server (NodeJS + Express + WebSockets). Mengatur autentikasi, API, *game loop*, map, dan komunikasi socket ke semua client.
-  * `src/ts/common/` - Kode yang di-share/digunakan baik oleh client maupun server (misalnya definisi model, constant, utils).
-  * `src/ts/components/` - Komponen Angular untuk bagian antarmuka web (UI modal, action bar, karakter editor, chat log).
-  * `src/ts/graphics/` - Sistem WebGL dan *canvas drawing* untuk me-render dunia, map, dan karakter-karakter.
-* `assets/` - Tempat menyimpan file statis seperti CSS, Fonts, Images.
-* `assets-source/` - Direktori sumber untuk file grafis (umumnya file PSD atau sprite-sheet).
-* `public/` - Berisi file yang langsung diekspos ke root (seperti gambar statis umum).
+#### Perintah Superadmin (Beberapa membutuhkan mode *beta* atau *dev*)
+* `/update` / `/shutdown` - Memberi aba-aba hitung mundur pemeliharaan/update sistem.
+* `/loadmap` / `/savemap` - Memuat atau menyimpan state instance map ke file lokal.
+* Fitur cheat/debug seperti `/season`, `/weather`, `/hold`, `/noclouds` dan `/testparty` tidak didokumentasikan di sini karena hanya dapat dijalankan di lingkungan *non-production* (`--beta` atau `DEVELOPMENT`). Silahkan baca `BETA_DEV_FEATURES.md`.
+</details>
 
-### 2. Memodifikasi Assets (Menambahkan Item / Pakaian)
-
-Game ini menggunakan sistem *sprite sheet* untuk me-render animasi, objek, rambut, hingga item.
-
-1. **Sprite Images**: Letakkan file gambar baru di folder `assets-source` atau ubah file gambar `.png` yang ada. Biasanya, untuk rambut/pakaian, Anda harus menggambar semua frame animasinya (berdiri, berjalan, trotting, sitting, dll).
-2. **Generator Sprite**: Gunakan script `gulp dev --sprites` (atau jalankan `npm run build-sprites`) untuk mengubah gambar/gambar individual dari direktori `assets-source` menjadi file *sprite sheet* final.
-   > **Tip**: Kamu dapat menggunakan file trigger dengan menyentuh/mengubah isi `src/ts/tools/trigger.txt` untuk men-trigger ulang sprite generation otomatis jika sedang dalam mode dev.
-3. **Mendaftarkan Asset ke Kode**:
-   Setelah sprite sheet di-generate, pastikan objek tersebut ditambahkan ke script inisialisasi di `src/ts/common/pony.ts` atau `src/ts/common/entities.ts` sesuai dengan peruntukkannya (misal: `manespire`, `tails`, atau `accessories`).
-
-### 3. Memodifikasi Gameplay (Client & Server)
-
-Alur penambahan sebuah aksi (misal: "Berdansa") umumnya melibatkan 3 tahapan:
-
-#### A. Menambah Deklarasi Action di Common
-* Buka `src/ts/common/interfaces.ts` dan tambahkan konstanta aksi Anda di dalam `enum Action`.
-* Tentukan `EntityState` (misal: `PonyDancing`) yang merepresentasikan status karakter.
-
-#### B. Handle Aksi di Client
-* Tambahkan deteksi klik UI atau hotkey keyboard di `src/ts/client/playerActions.ts`. Contoh:
-  ```typescript
-  export function danceAction(player: Pony, game: PonyTownGame) {
-      if (canPonyDance(player, game.map)) {
-          game.send(server => server.action(Action.Dance));
-          // ubah state lokal agar instan sebelum dapat feedback dari server
-          player.state = setPonyState(player.state, EntityState.PonyDancing);
-      }
-  }
-  ```
-* Berikan respon visual, seperti mengubah frame yang akan di render di `src/ts/client/ponyDraw.ts` jika sedang di state `PonyDancing`.
-
-#### C. Handle Aksi di Server
-* Server mendengarkan aksi klien lewat event handler WebSocket. Cari logika penanganan action, biasanya di file `src/ts/server/serverActions.ts` atau `src/ts/server/playerUtils.ts`.
-* Tambahkan pengecekan logika (apakah bisa berdansa) di server, dan sebarkan `Update` status ke semua klien (pemain lain yang ada di layar agar melihat karakter Anda berdansa).
-
-### 4. Custom Map
-
-Untuk menambahkan peta baru:
-1. Buka `src/ts/server/maps/`.
-2. Buat file script pembuatan peta (atau duplikasi `customMap.ts`). Di sini Anda menentukan struktur tile, penempatan pohon, rumah, dll.
-3. Buka `src/ts/server/start.ts` lalu cari baris di mana map diinisialisasi (disekitar baris 35). Registrasikan dan inisiasi class map baru Anda ke instance `world`.
+</details>

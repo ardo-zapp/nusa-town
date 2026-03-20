@@ -35,7 +35,7 @@ describe('serverRegion', () => {
 
 			pushUpdateEntityToRegion(region, { entity, flags: UpdateFlags.Position, x: 5, y: 4, vx: 0, vy: 0 });
 
-			expect(region.entityUpdates).eql(<EntityUpdate[]>[
+			expect(region.entityUpdates).eql([
 				{
 					entity,
 					flags: UpdateFlags.Position,
@@ -47,7 +47,7 @@ describe('serverRegion', () => {
 					playerState: 0,
 					options: undefined,
 				},
-			]);
+			] as EntityUpdate[]);
 		});
 
 		it('updates existing entity update', () => {
@@ -56,7 +56,7 @@ describe('serverRegion', () => {
 
 			pushUpdateEntityToRegion(region, { entity, flags: UpdateFlags.Position | UpdateFlags.Expression, x: 10, y: 11, vx: 5, vy: 3 });
 
-			expect(region.entityUpdates).eql(<EntityUpdate[]>[
+			expect(region.entityUpdates).eql([
 				{
 					entity,
 					flags: UpdateFlags.Position | UpdateFlags.Expression,
@@ -68,7 +68,7 @@ describe('serverRegion', () => {
 					playerState: 0,
 					options: undefined,
 				},
-			]);
+			] as EntityUpdate[]);
 		});
 
 		it('does not update position of existing entry if position flag is false', () => {
@@ -81,7 +81,7 @@ describe('serverRegion', () => {
 
 			pushUpdateEntityToRegion(region, { entity, flags: UpdateFlags.Expression });
 
-			expect(region.entityUpdates).eql(<EntityUpdate[]>[
+			expect(region.entityUpdates).eql([
 				{
 					entity,
 					flags: UpdateFlags.Position | UpdateFlags.Expression,
@@ -93,7 +93,7 @@ describe('serverRegion', () => {
 					playerState: 0,
 					options: undefined,
 				},
-			]);
+			] as EntityUpdate[]);
 		});
 	});
 

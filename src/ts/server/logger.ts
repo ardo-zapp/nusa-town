@@ -8,7 +8,7 @@ import { ServerConfig } from '../common/adminInterfaces';
 import { pathTo } from './paths';
 import { ID } from './db';
 
-const { reset, gray, magenta, cyan, green, yellow, red } = chalk;
+const { reset, gray, magenta, cyan, green, yellow, red } = chalk as any;
 
 function format(color: (text: string) => string) {
 	//'[{{timestamp}}] [{{title}}] {{message}} ({{file}}:{{line}})',

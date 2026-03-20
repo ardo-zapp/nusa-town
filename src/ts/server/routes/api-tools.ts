@@ -25,7 +25,7 @@ export default function (server: ServerConfig, settings: Settings, world: World 
 	});
 
 	app.get('/animation/:id', offline, (req, res) => {
-		const filePath = path.join(paths.store, req.params.id);
+		const filePath = path.join(paths.store, req.params['id']);
 
 		res.sendFile(filePath);
 	});

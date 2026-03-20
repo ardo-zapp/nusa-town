@@ -1,2 +1,2 @@
-export const HASH = 'LYokylfGVy';
-export const STAMP = 3042898759;
+export const HASH = '2DZ4Jid7MO';
+export const STAMP = 639653469;

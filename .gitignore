@@ -1,3 +1,4 @@
+.idea/
 node_modules/
 
 /build/
@@ -6,5 +7,8 @@ node_modules/
 /settings/
 
 /.vs
+
+/src/ts/generated/*
+!/src/ts/generated/gamepad-template.ts
 
 /config.json

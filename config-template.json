@@ -4,8 +4,21 @@
   "twitterLink": "<LINK_TO_TWITTER>",
   "contactEmail": "your_contact_email@example.com",
   "contactDiscord": "your_contact_discord#0000",
+  "wdsUrl": "http://localhost:8091",
+  "sw": true,
+  "noindex": false,
+  "rollbar": {
+    "environment": "",
+    "clientToken": "",
+    "serverToken": "",
+    "gulpToken": ""
+  },
+  "analytics": {
+    "trackingID": ""
+  },
   "port": 8090,
   "adminPort": 8091,
+  "wsPortAdmin": 10091,
   "host": "http://localhost:8090/",
   "local": "localhost:8090",
   "adminLocal": "localhost:8091",
@@ -27,7 +40,6 @@
       "clientSecret": "<CLIENT_SECERET_HERE>"
     }
   },
-  "assetsPath": "assets-source",
   "season": "spring",
   "holiday": "none",
   "servers": [

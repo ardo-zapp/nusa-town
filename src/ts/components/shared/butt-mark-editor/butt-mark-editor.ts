@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { fill } from 'lodash';
 import { PonyInfo } from '../../../common/interfaces';
 import { CM_SIZE } from '../../../common/constants';
-import { faTrash, faEraser, faEyeDropper, faPaintbrush } from '../../../client/icons';
+import { faTrash, faEraser, faEyeDropper, faPaintBrush } from '../../../client/icons';
 
 export interface ButtMarkEditorState {
 	brushType: string;
@@ -17,7 +17,7 @@ export class ButtMarkEditor {
 	readonly trashIcon = faTrash;
 	readonly eraserIcon = faEraser;
 	readonly eyeDropperIcon = faEyeDropper;
-	readonly paintBrushIcon = faPaintbrush;
+	readonly paintBrushIcon = faPaintBrush;
 
 	readonly cmSize = CM_SIZE;
 	@Input() info!: PonyInfo;

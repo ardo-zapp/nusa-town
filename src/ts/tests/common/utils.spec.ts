@@ -160,10 +160,10 @@ describe('utils', () => {
 	});
 
 	describe('hasFlag()', () => {
-		enum Foo {
-			Aaa = 1,
-			Bbb = 2,
-		}
+		const Foo = {
+			Aaa: 1,
+			Bbb: 2,
+		};
 
 		it('returns true if flag is set', () => {
 			expect(hasFlag(Foo.Aaa, Foo.Aaa)).true;
@@ -179,10 +179,10 @@ describe('utils', () => {
 	});
 
 	describe('setFlag()', () => {
-		enum Foo {
-			Aaa = 1,
-			Bbb = 2,
-		}
+		const Foo = {
+			Aaa: 1,
+			Bbb: 2,
+		};
 
 		it('sets flag', () => {
 			expect(setFlag(0, Foo.Aaa, true)).equal(Foo.Aaa);

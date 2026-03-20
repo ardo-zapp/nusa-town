@@ -206,9 +206,15 @@ const stats = new StatsTracker(statsPath);
 const sessionMiddlewares = once(() => [createSession(), passport.initialize(), passport.session()] as express.RequestHandler[]);
 import { Server as UwsAdapterServer } from './utils/uwsAdapter';
 
-// Prioritaskan wsPort dari config, jika tidak ada gunakan port + 2000 untuk menghindari tabrakan dengan WDS atau admin
-const wsPort = server.wsPort || (port + 2000);
-// Otomatis inject wsHost jika berjalan murni di localhost tanpa proxy (untuk mempermudah development lokal)
+// Establish the assigned WebSocket port, fallback to +2000 offset to avoid WDS/admin port collisions.
+let wsPort = server.wsPort || (port + 2000);
+
+// Use wsPortAdmin for standalone admin server
+if (server.id === 'admin') {
+	wsPort = config.wsPortAdmin || (port + 2000);
+}
+
+// Automatically assign local WebSocket host configurations if running locally without proxy constraints.
 const wsHost = (config.host && config.host.includes('localhost') && !config.proxy) ? `ws://localhost:${wsPort}` : undefined;
 
 const adminMiddlewares = once(() => [...sessionMiddlewares(), isAdmin(server)]);
@@ -221,8 +227,7 @@ const socketOptionsBase: ServerOptions = {
 initLogRequest(stats.logRequest);
 initLogSwearingAndSpamming(stats.logSwearing, stats.logSpamming);
 
-// Instantiate adapter directly so we can reference it for .listen()
-// Namun, kita harus membungkus constructor agar kita bisa menangkap `verifyClient` dari ag-sockets.
+// Instantiate adapter reference directly to bind custom ports and capture ag-sockets `verifyClient` overrides
 let uwsAdapter: any | undefined;
 
 const host = createServerHost(httpServer, {

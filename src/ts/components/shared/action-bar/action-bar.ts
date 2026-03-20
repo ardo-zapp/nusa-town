@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, ViewChild, ElementRef, TemplateRef } from '@angular/core';
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 import { ButtonAction } from '../../../common/interfaces';
 import { PonyTownGame } from '../../../client/game';
@@ -16,7 +16,7 @@ import { faCog } from '../../../client/icons';
 })
 export class ActionBar {
 	@ViewChild('scroller', { static: true }) scroller!: ElementRef;
-	@ViewChild('actionsModal', { static: true }) actionsModal!: ElementRef;
+	@ViewChild('actionsModal', { static: true }) actionsModal!: TemplateRef<any>;
 	@Input() blurred = false;
 	readonly cogIcon = faCog;
 	activeAction: ButtonAction | undefined = undefined;

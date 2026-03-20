@@ -16,4 +16,4 @@ import { argv } from 'yargs';
 (global as any).TESTS = false;
 (global as any).performance = Date;
 
-Promise.promisifyAll(fs);
+(Promise as any).promisifyAll(fs);

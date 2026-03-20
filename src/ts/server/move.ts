@@ -1,5 +1,7 @@
 import * as moment from 'moment';
 import chalk from 'chalk';
+const gray = (chalk as any).gray;
+const yellow = (chalk as any).yellow;
 import { IClient } from './serverInterfaces';
 import { decodeMovement, dirToVector, flagsToSpeed, isMovingRight } from '../common/movementUtils';
 import { setPonyState, isSittingState, isLyingState } from '../common/entityUtils';
@@ -168,12 +170,12 @@ function checkTeleporting(
 
 	if (outX || outY) {
 		if (settings.logTeleporting) {
-			const colX = outX ? chalk.red : chalk.reset;
-			const colY = outY ? chalk.red : chalk.reset;
+			const colX = outX ? (chalk as any).red : (chalk as any).reset;
+			const colY = outY ? (chalk as any).red : (chalk as any).reset;
 
 			logger.log(
-				`[${chalk.gray(moment().format('MMM DD HH:mm:ss'))}] [${chalk.yellow('teleport')}] ` +
-				`[${chalk.gray(client.accountId)}] (${client.account.name})\n` +
+				`[${gray(moment().format('MMM DD HH:mm:ss'))}] [${yellow('teleport')}] ` +
+				`[${gray(client.accountId)}] (${client.account.name})\n` +
 				`\tdx: ${client.lastX.toFixed(5)} -> ${colX(x.toFixed(5))} [${minX.toFixed(5)}-${maxX.toFixed(5)}]\n` +
 				`\tdy: ${client.lastY.toFixed(5)} -> ${colY(y.toFixed(5))} [${minY.toFixed(5)}-${maxY.toFixed(5)}]\n` +
 				`\tdt: ${delta.toFixed(5)}`);

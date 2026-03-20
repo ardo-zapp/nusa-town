@@ -4,13 +4,13 @@ import { ServerConfig } from '../common/adminInterfaces';
 export interface AppConfig {
 	title: string;
 	twitterLink?: string;
-	supporterLink?: string;
 	discordLink?: string;
 	contactEmail?: string;
 	contactDiscord?: string;
 	wdsUrl?: string;
 	port: number;
 	adminPort?: number;
+	wsPortAdmin?: number;
 	host: string;
 	proxy?: number;
 	noindex?: boolean;
@@ -20,7 +20,6 @@ export interface AppConfig {
 	adminLocal?: string;
 	sw?: boolean;
 	db: string;
-	pg: any;
 	rollbar?: {
 		environment: string;
 		clientToken: string;
@@ -30,7 +29,6 @@ export interface AppConfig {
 	analytics?: {
 		trackingID: string;
 	};
-	assetsPath?: string;
 	season?: string;
 	holiday?: string;
 	oauth: { [key: string]: any };
