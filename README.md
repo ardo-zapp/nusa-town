@@ -64,6 +64,8 @@ Then edit `config.json` to suit your needs. Below is the explanation of what eac
   },
   "port": 8090, // The public-facing HTTP port the game server listens to
   "adminPort": 8091, // The HTTP port for the admin/standalone server
+  "wsPortAdmin": 10091, // The WebSocket port for the admin/standalone server
+  "toolsPort": 8092, // The HTTP port for the in-game developer tools
   "host": "http://localhost:8090/", // The root public URL of your server. Change to "https://example.com/" in production.
   "local": "localhost:8090", // IP:Port pair used for internal cluster communication (login/game API)
   "adminLocal": "localhost:8091", // Internal IP:Port pair for the admin server
@@ -81,18 +83,18 @@ Then edit `config.json` to suit your needs. Below is the explanation of what eac
   "servers": [ // Defines the individual game sub-servers running on your cluster
     {
       "id": "main", // Server ID (used by CLI and start commands)
-      "port": 8090, // Express port for the game REST API
-      "wsPort": 10092, // uWebSockets port for the game WebSocket traffic
+      "port": 8093, // Express port for the game REST API
+      "wsPort": 10093, // uWebSockets port for the game WebSocket traffic
       "path": "/s00/ws", // The WebSocket route path matching the reverse proxy config
       "local": "localhost:8090", // Internal host for the cluster to send requests to this server
       "name": "18+ Server", // Server name visible to players in the lobby
       "desc": "18+ speaking server", // Server description in the lobby
       "season": "summer", // Overrides global season setting
       "holiday": "none", // Overrides global holiday setting
-      "flag": "", // An optional string identifier label for the UI (e.g. 'test', 'ru')
+      "flag": "", // An optional string identifier label for the UI (e.g. 'test', 'star', 'ru')
       "flags": { // Server feature toggles
-        "test": false, // Highlights the server as a test server
-        "editor": false // Enables the in-game map editor tools
+        "test": true, // Highlights the server as a test server
+        "editor": true // Enables the in-game map editor tools
       },
       "alert": "18+" // Optional warning pop-up before joining the server
     }
@@ -164,6 +166,18 @@ Get OAuth keys for the authentication platform of your choice (github, google, t
   }
   ```
 
+
+**Patreon**
+- Go to https://www.patreon.com/portal/registration/register-clients and create a new app.
+- Set redirect URI to `http://<your domain>/auth/patreon/callback` or `http://localhost:8090/auth/patreon/callback` for localhost server.
+- Add this to `oauth` field in your `config.json`:
+  ```json
+  "patreon": {
+    "clientID": "<your_client_id>",
+    "clientSecret": "<your_client_secret>"
+  }
+  ```
+
 **VKontakte**
 - Go to https://vk.com/apps?act=manage and create a new app.
 - Set Authorized redirect URI to `http://<your domain>/auth/vkontakte/callback` or `http://localhost:8090/auth/vkontakte/callback` if using localhost server.
@@ -226,7 +240,7 @@ node pony-town.js --game dev    # Starts the dev server (in a separate terminal/
 
 If you want to isolate everything including the login and admin standalone server:
 ```bash
-node pony-town.js --login                    # Login server
+node pony-town.js --login --beta             # Login server (--beta is optional, use only if your main/dev server has "test" and "editor" flags enabled)
 node pony-town.js --admin --standaloneadmin  # Admin server
 node pony-town.js --game main                # Main 18+ server
 node pony-town.js --game safe                # Safe server
@@ -247,8 +261,6 @@ node pony-town.js --login --admin --game --tools --beta
 ```
 *Important Notes on Beta Features:*
 1. **Server Configuration:** To actually see developer-only map objects and use the map editor, ensure your `config.json` has `"test": true` and `"editor": true` enabled under the `flags` field for that server.
-2. **Build Dependency:** You **MUST** run `npm run build-beta` first before starting the node server with the `--beta` flag (e.g. `node pony-town.js --game dev --beta`).
-3. The `--beta` backend flag opens admin chat commands and cheat features. However, the heavy Map Editor user interface (in the browser) is *physically removed* from the JavaScript bundle during a standard `npm run build` to save bandwidth. Running a standard `npm run build` later on will overwrite and erase your beta UI tools.
  Development Environment
 
 ```bash
@@ -302,21 +314,19 @@ Before starting PM2 and the Proxy, you must adjust your `config.json` to separat
    "proxy": true,
    "host": "https://example.com/"
    ```
-2. Change the port for the server with the ID `main` to `8092` and its local value:
+2. **This part is optional**, you can leave it for map editing or beta mode (`"flag": "test"` = developer only or `"flag": "star"` = for supporters). Make sure to add this json object into the `dev` server config in `config.json`:
    ```json
-   "id": "main",
-   "port": 8092,
-   //...
-   "local": "localhost:8092",
+   "flags": {
+     "test": true,
+     "editor": true
+   },
    ```
-3. Change the port for the server with the ID `safe` to `8093` and its local value:
-   ```json
-   "id": "safe",
-   "port": 8093,
-   //...
-   "local": "localhost:8093",
+   If you want to delete it instead, delete the dev server block `"id": "dev"` from `config.json` and also delete this block from apache:
+   ```apacheconf
+   # Dev Server - WebSocket
+   ProxyPass "/s02/ws" "ws://localhost:10094/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+   ProxyPassReverse "/s02/ws" "ws://localhost:10094/s02/ws"
    ```
-4. **Delete the entire `dev` server configuration block** (the one with `"id": "dev"`) from `config.json` because this configuration is only intended for *production*.
 
 #### B. Running PM2
 
@@ -336,6 +346,35 @@ Before starting PM2 and the Proxy, you must adjust your `config.json` to separat
    pm2 startup
    pm2 save
    ```
+
+---
+### Useful PM2 Commands
+
+Here are some basic commands for managing your servers using PM2:
+
+- **Viewing Server Logs:**
+  `pm2 logs` (View all logs in real-time)
+  `pm2 logs nusatown-main-game` (View logs for a specific instance)
+
+- **Restarting Servers:**
+  `pm2 restart all` (Restart all instances)
+  `pm2 restart nusatown-main-game` (Restart a specific instance)
+
+- **Stopping Servers:**
+  `pm2 stop all`
+  `pm2 stop nusatown-main-game`
+
+- **Deleting Instances from PM2:**
+  `pm2 delete all`
+  `pm2 delete nusatown-main-game`
+
+- **Killing the PM2 Daemon:**
+  `pm2 kill`
+
+- **Updating Configuration (If ecosystem.config.js changes):**
+  If you make changes to `ecosystem.config.js`, apply those changes without deleting the instance using:
+  `pm2 restart ecosystem.config.js --update-env`
+---
 
 #### C. Apache Reverse Proxy Setup
 
@@ -373,29 +412,120 @@ A reverse proxy must be set up to serve your game over standard HTTP/HTTPS ports
     RequestHeader set X-Forwarded-Proto "https"
     RequestHeader set X-Forwarded-Port "443"
 
-    # Main Server WebSocket (wsPort: 10092)
-    ProxyPass "/s00/ws" "ws://localhost:10092/s00/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
-    ProxyPassReverse "/s00/ws" "ws://localhost:10092/s00/ws"
+    # Main Server - WebSocket
+    ProxyPass "/s00/ws" "ws://localhost:10093/s00/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s00/ws" "ws://localhost:10093/s00/ws"
 
-    # Safe Server WebSocket (wsPort: 10093)
-    ProxyPass "/s01/ws" "ws://localhost:10093/s01/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
-    ProxyPassReverse "/s01/ws" "ws://localhost:10093/s01/ws"
+    # Safe Server - WebSocket
+    ProxyPass "/s01/ws" "ws://localhost:10094/s01/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s01/ws" "ws://localhost:10094/s01/ws"
 
-    # Admin WS - Standalone (wsPortAdmin: 10091)
+    # Dev Server - WebSocket
+    ProxyPass "/s02/ws" "ws://localhost:10095/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s02/ws" "ws://localhost:10095/s02/ws"
+
+    # Standalone Admin - WebSocket
     ProxyPass "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin" flushpackets=on keepalive=On retry=0 timeout=3600 max=50 acquire=3000
     ProxyPassReverse "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin"
 
-    # HTTP Fallback - Standalone Admin (port admin: 8091)
+    # Standalone Admin - HTTP
     ProxyPass "/admin/" "http://localhost:8091/admin/" keepalive=On retry=0
     ProxyPassReverse "/admin/" "http://localhost:8091/admin/"
 
-    # HTTP Fallback - Root (port login: 8090)
+    # Standalone Tools - HTTP
+    ProxyPass "/tools/" "http://localhost:8092/tools/" keepalive=On retry=0
+    ProxyPassReverse "/tools/" "http://localhost:8092/tools/"
+
+    # HTTP Fallback
     ProxyPass "/" "http://localhost:8090/" keepalive=On retry=0
     ProxyPassReverse "/" "http://localhost:8090/"
 
     ErrorLog ${APACHE_LOG_DIR}/nusatown_error.log
     CustomLog ${APACHE_LOG_DIR}/nusatown_access.log combined
 </VirtualHost>
+```
+
+**Alternative: Create an Nginx Server Block configuration file**
+Apache is highly recommended, but an Nginx configuration is provided below as an alternative.
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-Port 443;
+    proxy_set_header Host $host;
+
+    # Main Server - WebSocket
+    location /s00/ws {
+        proxy_pass http://127.0.0.1:10093/s00/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Safe Server - WebSocket
+    location /s01/ws {
+        proxy_pass http://127.0.0.1:10094/s01/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Dev Server - WebSocket
+    location /s02/ws {
+        proxy_pass http://127.0.0.1:10095/s02/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Standalone Admin - WebSocket
+    location /admin/ws-admin {
+        proxy_pass http://127.0.0.1:10091/admin/ws-admin;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Standalone Admin - HTTP
+    location /admin/ {
+        proxy_pass http://127.0.0.1:8091/admin/;
+    }
+
+    # Standalone Tools - HTTP
+    location /tools/ {
+        proxy_pass http://127.0.0.1:8092/tools/;
+    }
+
+    # HTTP Fallback
+    location / {
+        proxy_pass http://127.0.0.1:8090/;
+    }
+
+    access_log /var/log/nginx/nusatown_access.log;
+    error_log /var/log/nginx/nusatown_error.log;
+}
 ```
 
 3. **Enable the site configuration and restart Apache**:
@@ -567,7 +697,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 4. Build and run:
 
 ```bash
-docker compose up --build
+cd docker && docker-compose up --build
 ```
 
 ### Services Architecture
@@ -590,18 +720,18 @@ Access the application:
 ### Useful Commands
 
 ```bash
-docker compose up --build     # build and start all services
-docker compose up -d          # start in background (detached)
-docker compose down           # stop all services
-docker compose logs -f        # view logs (follow mode)
-docker compose logs game-main # view logs for specific service
-docker compose restart login  # restart specific service
+cd docker && docker-compose up --build     # build and start all services
+cd docker && docker-compose up -d          # start in background (detached)
+cd docker && docker-compose down           # stop all services
+cd docker && docker-compose logs -f        # view logs (follow mode)
+cd docker && docker-compose logs game-main # view logs for specific service
+cd docker && docker-compose restart login  # restart specific service
 ```
 
 ### Adding Roles via Docker
 
 ```bash
-docker compose exec game-main node cli.js --addrole <account_id> superadmin
+cd docker && docker-compose exec game-main node cli.js --addrole <account_id> superadmin
 ```
 
 </details>
@@ -671,6 +801,7 @@ Kemudian edit file `config.json` sesuai dengan kebutuhan Anda. Di bawah ini adal
   "port": 8090, // Port HTTP publik yang mendengarkan koneksi game server
   "adminPort": 8091, // Port HTTP untuk server mandiri administrator (standalone admin server)
   "wsPortAdmin": 10091, // Port WebSocket khusus untuk traffic administrator (standalone admin server).
+  "toolsPort": 8092, // Port HTTP khusus untuk fitur developer (in-game tools)
   "host": "http://localhost:8090/", // URL domain utama server. Ganti menjadi "https://example.com/" pada tahap production.
   "local": "localhost:8090", // Pasangan IP:Port internal yang digunakan kluster untuk berkomunikasi (contoh: login mengirim auth ke game server)
   "adminLocal": "localhost:8091", // IP:Port internal server admin
@@ -688,18 +819,18 @@ Kemudian edit file `config.json` sesuai dengan kebutuhan Anda. Di bawah ini adal
   "servers": [ // Definisi setiap sub-server (game server) yang berjalan di kluster Anda
     {
       "id": "main", // ID Server internal (dipakai oleh CLI/startup script `--game main`)
-      "port": 8090, // Port Express HTTP (REST API game map)
-      "wsPort": 10092, // Port khusus uWebSockets untuk lalu-lintas WebSocket secara direct
+      "port": 8093, // Port Express HTTP (REST API game map)
+      "wsPort": 10093, // Port khusus uWebSockets untuk lalu-lintas WebSocket secara direct
       "path": "/s00/ws", // Rute WebSocket path yang dicocokkan dengan reverse proxy Apache/Nginx
       "local": "localhost:8090", // Alamat host lokal yang dituju sistem ketika membroadcast info ke map ini
       "name": "18+ Server", // Nama sub-server yang muncul di daftar pilihan lobi
       "desc": "18+ speaking server", // Deskripsi singkat di lobi
       "season": "summer", // Melakukan override / menimpa musim global
       "holiday": "none", // Melakukan override / menimpa liburan global
-      "flag": "", // Label identifikasi sub-server tambahan di UI (contoh: 'test', 'ru')
+      "flag": "", // Label identifikasi sub-server tambahan di UI (contoh: 'test', 'star', 'ru')
       "flags": { // Toggle fitur in-game pada sub-server
-        "test": false, // Menandai server dengan border "test"
-        "editor": false // Mengaktifkan alat modifikasi map (map editor) bagi user
+        "test": true, // Menandai server dengan border "test"
+        "editor": true // Mengaktifkan alat modifikasi map (map editor) bagi user
       },
       "alert": "18+" // Pop-up persetujuan opsional sebelum user memasuki server ini
     }
@@ -771,6 +902,18 @@ Dapatkan kunci OAuth untuk platform pilihan Anda (github, google, twitter, vkont
   }
   ```
 
+
+**Patreon**
+- Buka https://www.patreon.com/portal/registration/register-clients dan buat aplikasi baru.
+- Atur redirect URI ke `http://<domain Anda>/auth/patreon/callback` atau `http://localhost:8090/auth/patreon/callback` untuk server localhost.
+- Tambahkan ini ke field `oauth` di `config.json` Anda:
+  ```json
+  "patreon": {
+    "clientID": "<client_id_Anda>",
+    "clientSecret": "<client_secret_Anda>"
+  }
+  ```
+
 **VKontakte**
 - Buka https://vk.com/apps?act=manage dan buat aplikasi baru.
 - Atur Authorized redirect URI ke `http://<domain Anda>/auth/vkontakte/callback` atau `http://localhost:8090/auth/vkontakte/callback` untuk server localhost.
@@ -833,7 +976,7 @@ node pony-town.js --game dev    # Memulai server "dev" (di terminal terpisah)
 
 Metode ini benar-benar memisahkan semuanya, termasuk memisah server login dengan server admin standalone.
 ```bash
-node pony-town.js --login                    # Menjalankan server Login
+node pony-town.js --login --beta             # Menjalankan server Login (--beta bersifat opsional, gunakan hanya jika server main/dev Anda mengaktifkan flags "test" dan "editor")
 node pony-town.js --admin --standaloneadmin  # Menjalankan server Admin
 node pony-town.js --game main                # Menjalankan server Main 18+
 node pony-town.js --game safe                # Menjalankan server Safe
@@ -855,8 +998,6 @@ node pony-town.js --login --admin --game --tools --beta
 
 *Catatan Penting mengenai Fitur Beta:*
 1. **Konfigurasi Server:** Agar objek tes (seperti item yang bisa dipungut) dan alat map editor in-game benar-benar diizinkan, pastikan file `config.json` Anda memiliki `"test": true` dan `"editor": true` di dalam properti `flags` server yang dituju.
-2. **Ketergantungan Build:** Anda **WAJIB** melakukan kompilasi klien dengan `npm run build-beta` sebelum menaikkan server node dengan akhiran `--beta` (misal: `node pony-town.js --game dev --beta`).
-3. Menjalankan `--beta` di backend akan membuka cheat command admin. Namun, UI Map Editor di browser akan terhapus jika Anda mengompilasi sistem menggunakan `npm run build` (build standar tanpa beta) karena sistem otomatis membersihkan kode berat untuk production. **Mengeksekusi `npm run build` standar setelahnya akan membuat UI Beta Anda hilang kembali.**
 
 #### Lingkungan Pengembangan (Development)
 
@@ -910,21 +1051,19 @@ Sebelum memulai PM2 dan Proxy, Anda wajib melakukan penyesuaian di `config.json`
    "proxy": true,
    "host": "https://example.com/"
    ```
-2. Ganti port pada server yang ber-ID `main` menjadi `8092` beserta nilai lokalnya:
+2. Bagian ini bersifat opsional, boleh dibiarkan untuk edit map atau pada mode beta (`"flag": "test"` = khusus developer atau `"flag": "star"` = untuk supporter). Pastikan untuk menambahkan objek json berikut ini ke dalam pengaturan `dev` server di `config.json`:
    ```json
-   "id": "main",
-   "port": 8092,
-   //...
-   "local": "localhost:8092",
+   "flags": {
+     "test": true,
+     "editor": true
+   },
    ```
-3. Ganti port pada server yang ber-ID `safe` menjadi `8093` beserta nilai lokalnya:
-   ```json
-   "id": "safe",
-   "port": 8093,
-   //...
-   "local": "localhost:8093",
+   Jika ingin dihapus, hapus bagian Server dev `"id": "dev"` dari `config.json` dan hapus juga blok ini dari apache:
+   ```apacheconf
+   # Dev Server - WebSocket
+   ProxyPass "/s02/ws" "ws://localhost:10094/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+   ProxyPassReverse "/s02/ws" "ws://localhost:10094/s02/ws"
    ```
-4. **Hapus blok konfigurasi server `dev`** (yang memiliki `"id": "dev"`) seluruhnya dari `config.json` karena konfigurasi ini hanya ditujukan untuk *production*.
 
 #### B. Menjalankan PM2
 
@@ -944,6 +1083,35 @@ Sebelum memulai PM2 dan Proxy, Anda wajib melakukan penyesuaian di `config.json`
    pm2 startup
    pm2 save
    ```
+
+---
+### Perintah Operasional PM2 yang Berguna
+
+Berikut adalah beberapa perintah dasar untuk mengelola server menggunakan PM2:
+
+- **Melihat Log Server:**
+  `pm2 logs` (Melihat semua log secara real-time)
+  `pm2 logs nusatown-main-game` (Melihat log untuk spesifik instance)
+
+- **Restart Server:**
+  `pm2 restart all` (Restart semua instance)
+  `pm2 restart nusatown-main-game` (Restart spesifik instance)
+
+- **Menghentikan Server Sementara (Stop):**
+  `pm2 stop all`
+  `pm2 stop nusatown-main-game`
+
+- **Menghapus Instance dari PM2 (Delete):**
+  `pm2 delete all`
+  `pm2 delete nusatown-main-game`
+
+- **Mematikan Total PM2 Daemon (Kill):**
+  `pm2 kill`
+
+- **Update Konfigurasi (Jika ecosystem.config.js berubah):**
+  Jika Anda melakukan perubahan pada file `ecosystem.config.js`, terapkan perubahan tersebut tanpa harus menghapus instance dengan perintah:
+  `pm2 restart ecosystem.config.js --update-env`
+---
 
 #### C. Konfigurasi Apache Reverse Proxy
 
@@ -981,29 +1149,120 @@ Reverse proxy wajib dipasang untuk melayani game Anda di port HTTP/HTTPS standar
     RequestHeader set X-Forwarded-Proto "https"
     RequestHeader set X-Forwarded-Port "443"
 
-    # Main Server WebSocket (wsPort: 10092)
-    ProxyPass "/s00/ws" "ws://localhost:10092/s00/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
-    ProxyPassReverse "/s00/ws" "ws://localhost:10092/s00/ws"
+    # Main Server - WebSocket
+    ProxyPass "/s00/ws" "ws://localhost:10093/s00/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s00/ws" "ws://localhost:10093/s00/ws"
 
-    # Safe Server WebSocket (wsPort: 10093)
-    ProxyPass "/s01/ws" "ws://localhost:10093/s01/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
-    ProxyPassReverse "/s01/ws" "ws://localhost:10093/s01/ws"
+    # Safe Server - WebSocket
+    ProxyPass "/s01/ws" "ws://localhost:10094/s01/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s01/ws" "ws://localhost:10094/s01/ws"
 
-    # Admin WS - Standalone (wsPortAdmin: 10091)
+    # Dev Server - WebSocket
+    ProxyPass "/s02/ws" "ws://localhost:10095/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+    ProxyPassReverse "/s02/ws" "ws://localhost:10095/s02/ws"
+
+    # Standalone Admin - WebSocket
     ProxyPass "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin" flushpackets=on keepalive=On retry=0 timeout=3600 max=50 acquire=3000
     ProxyPassReverse "/admin/ws-admin" "ws://localhost:10091/admin/ws-admin"
 
-    # HTTP Fallback - Standalone Admin (port admin: 8091)
+    # Standalone Admin - HTTP
     ProxyPass "/admin/" "http://localhost:8091/admin/" keepalive=On retry=0
     ProxyPassReverse "/admin/" "http://localhost:8091/admin/"
 
-    # HTTP Fallback - Root (port login: 8090)
+    # Standalone Tools - HTTP
+    ProxyPass "/tools/" "http://localhost:8092/tools/" keepalive=On retry=0
+    ProxyPassReverse "/tools/" "http://localhost:8092/tools/"
+
+    # HTTP Fallback
     ProxyPass "/" "http://localhost:8090/" keepalive=On retry=0
     ProxyPassReverse "/" "http://localhost:8090/"
 
     ErrorLog ${APACHE_LOG_DIR}/nusatown_error.log
     CustomLog ${APACHE_LOG_DIR}/nusatown_access.log combined
 </VirtualHost>
+```
+
+**Alternatif: Buat file Server Block Nginx**
+Apache adalah rekomendasi utama, namun Nginx disediakan di bawah ini sebagai alternatif.
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-Port 443;
+    proxy_set_header Host $host;
+
+    # Main Server - WebSocket
+    location /s00/ws {
+        proxy_pass http://127.0.0.1:10093/s00/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Safe Server - WebSocket
+    location /s01/ws {
+        proxy_pass http://127.0.0.1:10094/s01/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Dev Server - WebSocket
+    location /s02/ws {
+        proxy_pass http://127.0.0.1:10095/s02/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Standalone Admin - WebSocket
+    location /admin/ws-admin {
+        proxy_pass http://127.0.0.1:10091/admin/ws-admin;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Standalone Admin - HTTP
+    location /admin/ {
+        proxy_pass http://127.0.0.1:8091/admin/;
+    }
+
+    # Standalone Tools - HTTP
+    location /tools/ {
+        proxy_pass http://127.0.0.1:8092/tools/;
+    }
+
+    # HTTP Fallback
+    location / {
+        proxy_pass http://127.0.0.1:8090/;
+    }
+
+    access_log /var/log/nginx/nusatown_access.log;
+    error_log /var/log/nginx/nusatown_error.log;
+}
 ```
 
 3. **Aktifkan konfigurasi dan restart Apache**:
@@ -1167,7 +1426,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 4. Build dan jalankan:
 
 ```bash
-docker compose up --build
+cd docker && docker-compose up --build
 ```
 
 ### Arsitektur Layanan (Services)
@@ -1190,18 +1449,18 @@ Akses aplikasi:
 ### Perintah yang Berguna
 
 ```bash
-docker compose up --build     # build dan jalankan semua layanan
-docker compose up -d          # jalankan di background (detached)
-docker compose down           # hentikan semua layanan
-docker compose logs -f        # lihat log (mode follow)
-docker compose logs game-main # lihat log untuk layanan tertentu
-docker compose restart login  # restart layanan tertentu
+cd docker && docker-compose up --build     # build dan jalankan semua layanan
+cd docker && docker-compose up -d          # jalankan di background (detached)
+cd docker && docker-compose down           # hentikan semua layanan
+cd docker && docker-compose logs -f        # lihat log (mode follow)
+cd docker && docker-compose logs game-main # lihat log untuk layanan tertentu
+cd docker && docker-compose restart login  # restart layanan tertentu
 ```
 
 ### Menambahkan Peran via Docker
 
 ```bash
-docker compose exec game-main node cli.js --addrole <account_id> superadmin
+cd docker && docker-compose exec game-main node cli.js --addrole <account_id> superadmin
 ```
 
 </details>

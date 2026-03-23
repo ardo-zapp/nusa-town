@@ -19,6 +19,16 @@
 	height: 40px;
 }
 
+.hammer-open-button {
+	display: block;
+	position: absolute;
+	left: 45px;
+	bottom: 0;
+	z-index: 2;
+	width: 42px;
+	height: 40px;
+}
+
 .chat-send-button {
 	position: absolute;
 	right: 0;
@@ -75,6 +85,53 @@
 
 	.chat-whisper > & {
 		color: $chat-whisper;
+	}
+}
+
+.command-suggestions {
+	position: absolute;
+	bottom: 40px;
+	left: 0;
+	background: rgba(0, 0, 0, 0.9);
+	color: white;
+	padding: 5px 0;
+	border-radius: 4px;
+	z-index: 10;
+	max-height: 200px;
+	overflow-y: auto;
+	width: 100%;
+
+	ul {
+		margin: 0;
+		padding: 0;
+
+		li {
+			padding: 5px 10px;
+			cursor: pointer;
+
+			&:hover, &.selected {
+				background: rgba(255, 255, 255, 0.2);
+			}
+
+			.cmd-name {
+				font-weight: bold;
+				color: #e3a95c;
+			}
+
+			.cmd-desc {
+				color: #cccccc;
+				font-size: 0.9em;
+			}
+		}
+	}
+
+	&::-webkit-scrollbar {
+		width: 7px;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background: rgb(77, 77, 77);
+		border-radius: 14px;
 	}
 }
 

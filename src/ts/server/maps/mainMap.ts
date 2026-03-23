@@ -1508,7 +1508,7 @@ export function createMainMap(world: World): ServerMap {
 	const mapSize = 20;
 	const map = createServerMap('', MapType.None, mapSize, mapSize, TileType.Grass);
 
-	map.flags |= MapFlags.EdibleGrass;
+	if (BETA || DEVELOPMENT) { map.flags |= MapFlags.EdibleGrass; }
 
 	// spawns
 

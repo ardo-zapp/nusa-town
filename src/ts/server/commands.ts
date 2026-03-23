@@ -232,6 +232,24 @@ export function createCommands(world: World): Command[] {
 		command(['leave'], '/leave - leave the game', '', ({ world }, client) => {
 			world.kick(client, '/leave');
 		}),
+		command(['account'], '/account - view account info in chat', '', ({ }, client) => {
+			const creationDate = client.account.createdAt && typeof client.account.createdAt.toISOString === 'function' ?
+				client.account.createdAt.toISOString().substring(0, 10).replace(/-/g, '.') : 'unknown';
+			const playtime = Math.floor((client.account.counters && (client.account.counters as any).playtime) || 0);
+			const days = Math.floor(playtime / 86400);
+			const hours = Math.floor((playtime % 86400) / 3600);
+			const minutes = Math.floor((playtime % 3600) / 60);
+
+			const parts: string[] = [];
+			if (days > 0) parts.push(`${days}d`);
+			if (hours > 0) parts.push(`${hours}h`);
+			if (minutes > 0) parts.push(`${minutes}m`);
+			const playtimeStr = parts.length > 0 ? parts.join(' ') : 'Not Played';
+
+			saySystem(client, `Account ID: ${client.accountId}`);
+			saySystem(client, `Creation Date: ${creationDate}`);
+			saySystem(client, `Total Playtime: ${playtimeStr}`);
+		}),
 
 		// pony states
 		command(['sit'], '/sit - sit down or stand up', '', shouldNotBeCalled),

@@ -5,7 +5,7 @@ import { SAY_MAX_LENGTH } from '../../../common/constants';
 import { Key } from '../../../client/input/input';
 import { PonyTownGame } from '../../../client/game';
 import { cleanMessage, isSpamMessage } from '../../../client/clientUtils';
-import { faComment, faAngleDoubleRight } from '../../../client/icons';
+import { faComment, faAngleDoubleRight, faHammer } from '../../../client/icons';
 import { isInParty } from '../../../client/partyUtils';
 import { handleActionCommand } from '../../../client/playerActions';
 import { hasHeadAnimation } from '../../../common/pony';
@@ -13,6 +13,7 @@ import { AutocompleteState, autocompleteMesssage, replaceEmojis, emojis } from '
 import { replaceNodes } from '../../../client/htmlUtils';
 import { invalidEnumReturn } from '../../../common/utils';
 import { findMatchingEntityNames, findEntityOrMockByAnyMeans, findBestEntityByName } from '../../../client/handlers';
+import { COMMANDS, CommandSuggestion } from '../../../client/commandSuggestions';
 import { sample } from 'lodash';
 
 const chatTypeNames: string[] = [];
@@ -45,6 +46,7 @@ function isActionCommand(message: string) {
 export class ChatBox implements AfterViewInit, OnDestroy {
 	readonly maxSayLength = SAY_MAX_LENGTH;
 	readonly commentIcon = faComment;
+	readonly hammerIcon = faHammer;
 	readonly sendIcon = faAngleDoubleRight;
 	readonly emotes = emojis;
 	emojiBoxState = 'none';
@@ -58,6 +60,8 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 	message: string | undefined = '';
 	chatType = ChatType.Say;
 	btnEmoji = emojis[0].names[0];
+	commandSuggestions: CommandSuggestion[] = [];
+	selectedSuggestionIndex = -1;
 	private pasted = false;
 	private lastMessages: string[] = [];
 	private state: AutocompleteState = {};
@@ -76,6 +80,13 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 
 		this.game.onCancel = () => this.isOpen ? (zone.run(() => this.close()), true) : false;
 	}
+	get canBuild() {
+		return this.game.map && (this.game.map as any).editableEntityLimit > 0;
+	}
+	restoreToolbox() {
+		this.say('/restoretoolbox', ChatType.Say, 0);
+	}
+
 	@Input() get disabled() {
 		return this._disabled;
 	}
@@ -110,6 +121,22 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 		} else {
 			this.emojiBoxState = 'none';
 		}
+	}
+	onMessageChange() {
+		if (this.message && this.message.startsWith('/')) {
+			const search = this.message.toLowerCase();
+			this.commandSuggestions = COMMANDS.filter(c => c.name.startsWith(search) && c.name !== search);
+			this.selectedSuggestionIndex = -1;
+		} else {
+			this.commandSuggestions = [];
+			this.selectedSuggestionIndex = -1;
+		}
+	}
+	selectCommand(cmd: CommandSuggestion) {
+		this.message = cmd.name + ' ';
+		this.commandSuggestions = [];
+		this.selectedSuggestionIndex = -1;
+		this.input.focus();
 	}
 	send(_event: Event | undefined) {
 		let chatType = this.chatType;
@@ -160,11 +187,23 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 		}
 	}
 	keydown(e: KeyboardEvent) {
-		if (e.keyCode !== Key.TAB && e.keyCode !== Key.SHIFT) {
+		if (e.keyCode !== Key.TAB && e.keyCode !== Key.SHIFT && e.keyCode !== Key.UP && e.keyCode !== Key.DOWN) {
 			this.state.lastEmoji = undefined;
 		}
 
-		if (e.keyCode === Key.TAB) {
+		if (e.keyCode === Key.UP && this.commandSuggestions.length > 0) {
+			this.selectedSuggestionIndex = this.selectedSuggestionIndex > 0 ? this.selectedSuggestionIndex - 1 : this.commandSuggestions.length - 1;
+			e.preventDefault();
+		} else if (e.keyCode === Key.DOWN && this.commandSuggestions.length > 0) {
+			this.selectedSuggestionIndex = this.selectedSuggestionIndex < this.commandSuggestions.length - 1 ? this.selectedSuggestionIndex + 1 : 0;
+			e.preventDefault();
+		} else if (e.keyCode === Key.TAB) {
+			if (this.commandSuggestions.length > 0) {
+				const index = this.selectedSuggestionIndex === -1 ? 0 : this.selectedSuggestionIndex;
+				this.selectCommand(this.commandSuggestions[index]);
+				e.preventDefault();
+				return;
+			}
 			if (this.message) {
 				if (/^\/(w|whisper) .+$/i.test(this.message)) {
 					const space = this.message.indexOf(' ');
@@ -180,7 +219,12 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 
 			e.preventDefault();
 		} else if (e.keyCode === Key.ENTER && this.isOpen) {
-			this.send(e);
+			if (this.selectedSuggestionIndex !== -1 && this.commandSuggestions.length > 0) {
+				this.selectCommand(this.commandSuggestions[this.selectedSuggestionIndex]);
+				e.preventDefault();
+			} else {
+				this.send(e);
+			}
 		} else if (e.keyCode === Key.ESCAPE) {
 			this.close();
 			e.preventDefault();
@@ -291,6 +335,8 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 			this.chatBox.nativeElement.hidden = true;
 			this.message = '';
 			this.pasted = false;
+			this.commandSuggestions = [];
+			this.selectedSuggestionIndex = -1;
 		}
 	}
 	toggle() {

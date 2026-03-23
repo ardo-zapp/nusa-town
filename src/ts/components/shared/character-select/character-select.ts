@@ -10,6 +10,7 @@ import { faSpinner, faTrash, faTimes, faCheck } from '../../../client/icons';
 import { focusElementAfterTimeout } from '../../../client/htmlUtils';
 import { delay } from '../../../common/utils';
 import { isMobile } from '../../../client/data';
+import { emojis } from '../../../client/emoji';
 
 @Component({
 	selector: 'character-select',
@@ -32,6 +33,10 @@ export class CharacterSelect {
 	@ViewChild('nameInput', { static: true }) nameInput!: ElementRef;
 	@ViewChild('ariaAnnounce', { static: true }) ariaAnnounce!: ElementRef;
 	@ViewChild('dropdown', { static: true }) dropdown!: Dropdown;
+	@Input() emojiButton = true;
+	readonly emotes = emojis;
+	emojiBoxState = 'none';
+	btnEmoji = 'clover';
 	removing = false;
 	private locked = false; // TEMP: move to model
 	constructor(
@@ -124,5 +129,25 @@ export class CharacterSelect {
 	private setError(error: string | undefined) {
 		this.error = error;
 		this.errorChange.emit(error);
+	}
+
+	addEmoji(emoji: string, name: string) {
+		this.toggleEmojiBox();
+		if (!this.pony)
+			return;
+		if (!this.pony.name) {
+			this.pony.name = emoji;
+		} else if (this.pony.name.length < this.maxNameLength) {
+			this.pony.name += emoji;
+		}
+		this.btnEmoji = name;
+	}
+
+	toggleEmojiBox() {
+		if (this.emojiBoxState === 'none') {
+			this.emojiBoxState = 'inline-block';
+		} else {
+			this.emojiBoxState = 'none';
+		}
 	}
 }

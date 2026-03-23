@@ -68,6 +68,7 @@ export {
 	faAngleDoubleDown,
 	faAngleDoubleLeft,
 	faAngleDoubleRight,
+	faHammer,
 	faPlay,
 	faRedo,
 	faSave,

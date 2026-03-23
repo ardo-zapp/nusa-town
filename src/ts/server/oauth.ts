@@ -14,7 +14,7 @@ import { colorToCSS } from '../common/color';
 import { config } from './config';
 import { IAccount } from './db';
 
-export type OAuthProfileName = string | { familyName: string; givenName: string; };
+export type OAuthProfileName = any;
 
 export interface OAuthProfile {
 	id?: string;
@@ -57,7 +57,7 @@ const providerList: OAuthProviderInfo[] = [
 		id: 'google',
 		name: 'Google',
 		color: '#DC4A3D',
-		connectOnly: true,
+		connectOnly: false,
 		strategy: GoogleStrategy,
 	},
 	{
@@ -83,6 +83,7 @@ const providerList: OAuthProviderInfo[] = [
 		id: 'patreon',
 		name: 'Patreon',
 		color: colorToCSS(PATREON_COLOR),
+		connectOnly: true,
 		strategy: PatreonStrategy,
 	},
 	{

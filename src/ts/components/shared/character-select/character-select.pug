@@ -1,6 +1,14 @@
 .sr-only(#ariaAnnounce aria-live="assertive")
 
 .character-select.input-group
+	.input-group-prepend(*ngIf="emojiButton" style="position: relative;")
+		button.btn.btn-default.character-emoji-button([emote]="btnEmoji" (click)="toggleEmojiBox()" aria-label="Emoji picker" title="Emoji picker" style="padding-top: 1px; padding-bottom: 0;")
+			emote-box([emote]="btnEmoji")
+		.emotes.emoji-box-top([style.display]="emojiBoxState")
+			ul
+				li(*ngFor="let e of emotes" (click)="addEmoji(e.symbol, e.names[0])")
+					span.emote-sample.mr-2
+						emote-box([emote]="e.names[0]")
 	input.form-control.text-center(
 		#nameInput
 		type="text"

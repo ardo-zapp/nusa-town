@@ -19,6 +19,7 @@
   "port": 8090,
   "adminPort": 8091,
   "wsPortAdmin": 10091,
+  "toolsPort": 8092,
   "host": "http://localhost:8090/",
   "local": "localhost:8090",
   "adminLocal": "localhost:8091",
@@ -45,8 +46,8 @@
   "servers": [
     {
       "id": "main",
-      "port": 8090,
-      "wsPort": 10092,
+      "port": 8093,
+      "wsPort": 10093,
       "path": "/s00/ws",
       "local": "localhost:8090",
       "name": "18+ Server",
@@ -62,8 +63,8 @@
     },
     {
       "id": "safe",
-      "port": 8091,
-      "wsPort": 10093,
+      "port": 8094,
+      "wsPort": 10094,
       "path": "/s01/ws",
       "local": "localhost:8091",
       "name": "Safe Server [PG]",
@@ -78,16 +79,16 @@
     },
     {
       "id": "dev",
-      "port": 8092,
-      "wsPort": 10094,
+      "port": 8095,
+      "wsPort": 10095,
       "path": "/s02/ws",
-      "local": "localhost:8092",
+      "local": "localhost:8095",
       "name": "Dev server",
       "desc": "Development server",
       "flag": "test",
       "flags": {
         "test": true,
-        "objects": true
+        "editor": true
       },
       "alert": "18+"
     }

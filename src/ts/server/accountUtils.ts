@@ -131,6 +131,9 @@ export async function findOrCreateAccount(auth: IAuth, profile: Profile, options
 	}
 
 	if (!account) {
+		if (profile.provider === 'patreon') {
+			throw new UserError('Patreon sign-up is disabled. Please use an existing account or another provider.');
+		}
 		account = createNewAccount(profile, options);
 		isNew = true;
 	}

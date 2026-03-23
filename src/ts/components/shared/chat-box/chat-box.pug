@@ -1,8 +1,13 @@
 .chat-box(#chatBox)
 	div(#chatBoxInput)
 		input.chat-input#chat-input(
-			#inputElement [(ngModel)]="message" (keydown)="keydown($event)" [maxlength]="maxSayLength"
+			#inputElement [(ngModel)]="message" (ngModelChange)="onMessageChange()" (keydown)="keydown($event)" [maxlength]="maxSayLength"
 			aria-label="Chat message")
+		.command-suggestions([hidden]="commandSuggestions.length === 0")
+			ul.list-unstyled
+				li(*ngFor="let cmd of commandSuggestions; let i = index" [class.selected]="i === selectedSuggestionIndex" (click)="selectCommand(cmd)")
+					span.cmd-name {{cmd.name}}
+					span.cmd-desc  - {{cmd.description}}
 		.chat-box-type(#typeBox (click)="toggleChatType()")
 			| #[span(#typePrefix)][#[span.chat-box-type-name(#typeName)]]:
 		.emotes.emoji-box([style.display]="emojiBoxState")
@@ -20,3 +25,9 @@ button.game-button.chat-open-button(
 	(click)="toggle()" (mousedown)="$event.preventDefault()" [disabled]="disabled" title="Toggle chat"
 	aria-label="Toggle message")
 	fa-icon([icon]="commentIcon" [fixedWidth]="true")
+
+button.game-button.hammer-open-button(
+	*ngIf="canBuild"
+	(click)="restoreToolbox()" (mousedown)="$event.preventDefault()" [disabled]="disabled" title="Restore toolbox"
+	aria-label="Restore toolbox")
+	fa-icon([icon]="hammerIcon" [fixedWidth]="true")
