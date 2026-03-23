@@ -83,8 +83,8 @@ Then edit `config.json` to suit your needs. Below is the explanation of what eac
   "servers": [ // Defines the individual game sub-servers running on your cluster
     {
       "id": "main", // Server ID (used by CLI and start commands)
-      "port": 8093, // Express port for the game REST API
-      "wsPort": 10093, // uWebSockets port for the game WebSocket traffic
+      "port": 8090, // Express port for the game REST API
+      "wsPort": 10090, // uWebSockets port for the game WebSocket traffic
       "path": "/s00/ws", // The WebSocket route path matching the reverse proxy config
       "local": "localhost:8090", // Internal host for the cluster to send requests to this server
       "name": "18+ Server", // Server name visible to players in the lobby
@@ -239,8 +239,9 @@ node pony-town.js --game dev    # Starts the dev server (in a separate terminal/
 **Method 2 (Fully Isolated Processes)**
 
 If you want to isolate everything including the login and admin standalone server:
+You MUST change the main server port ("id": "main") in config.json before running this, because the login server is separated from the main (game) server otherwise the port will clash. From port 8090 to 8093 and wsPort from 10090 to 10093.
 ```bash
-node pony-town.js --login --beta             # Login server (--beta is optional, use only if your main/dev server has "test" and "editor" flags enabled)
+node pony-town.js --login --beta             # Login server (--beta is optional. Only works if you have run "npm run build-beta", and the server has "test" & "editor" flag)
 node pony-town.js --admin --standaloneadmin  # Admin server
 node pony-town.js --game main                # Main 18+ server
 node pony-town.js --game safe                # Safe server
@@ -260,8 +261,14 @@ npm run build-beta
 node pony-town.js --login --admin --game --tools --beta
 ```
 *Important Notes on Beta Features:*
-1. **Server Configuration:** To actually see developer-only map objects and use the map editor, ensure your `config.json` has `"test": true` and `"editor": true` enabled under the `flags` field for that server.
- Development Environment
+1. **Server Configuration:** To actually see developer-only map objects and use the map editor, ensure your `config.json` has the following JSON object in the `flags` property of the target server:
+"flags": {
+  "test": true,
+  "editor": true
+}
+2. Build Dependency: The `--beta` argument only works if you have run `npm run build-beta`. If you run `npm run build` or `npm run build-fast`, the beta features will be automatically removed. You have to run `npm run build-beta` again to enable it.
+
+#### Development Environment
 
 ```bash
 npm run ts-watch        # terminal 1
@@ -314,19 +321,23 @@ Before starting PM2 and the Proxy, you must adjust your `config.json` to separat
    "proxy": true,
    "host": "https://example.com/"
    ```
-2. **This part is optional**, you can leave it for map editing or beta mode (`"flag": "test"` = developer only or `"flag": "star"` = for supporters). Make sure to add this json object into the `dev` server config in `config.json`:
-   ```json
-   "flags": {
-     "test": true,
-     "editor": true
-   },
-   ```
-   If you want to delete it instead, delete the dev server block `"id": "dev"` from `config.json` and also delete this block from apache:
-   ```apacheconf
-   # Dev Server - WebSocket
-   ProxyPass "/s02/ws" "ws://localhost:10094/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
-   ProxyPassReverse "/s02/ws" "ws://localhost:10094/s02/ws"
-   ```
+2. Dev Server, this part is optional, you can leave it for map editing, if left as is don't forget to run "npm run build-beta".
+
+If you want to delete it, delete the dev server block with "id": "dev" from config.json and also delete this block from apache:
+
+```apacheconf
+# Dev Server - WebSocket
+ProxyPass "/s02/ws" "ws://localhost:10094/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+ProxyPassReverse "/s02/ws" "ws://localhost:10094/s02/ws"
+```
+
+And run the standard build (not beta) "npm run build" or "npm run build-fast".
+
+Make sure you have run "npm run build-beta" if you keep the dev server or "npm run build-fast" if you have deleted the dev server from config.json.
+
+3. You MUST change the main server port ("id": "main") in config.json before running PM2 because the server is run as a "Fully Isolated Process".
+
+From port 8090 to 8093 and wsPort from 10090 to 10093.
 
 #### B. Running PM2
 
@@ -553,13 +564,38 @@ npx gulp dev --sprites
 ```
 This leverages `create-sprites.ts` to pack images from `assets-source` into optimized game sprites.
 
-#### Adding Assets (Items / Clothing)
-This game uses a *sprite sheet* system to render animations, objects, hair, and items.
+#### Asset Development Guide
+This game uses a *sprite sheet* system generated from `.psd` and `.png` files. To ensure visuals, *shadows*, and seasonal color effects function correctly in-game, here is the standard workflow for asset development:
 
-1. **Sprite Images**: Place new image files in the `assets-source` folder or modify existing `.png` files.
-2. **Sprite Generator**: Use `npx gulp dev --sprites` to compile images into sprite sheets.
-   > **Tip**: You can use a trigger file by touching `src/ts/tools/trigger.txt` to trigger automatic sprite generation if you are in dev mode.
-3. **Registration**: Ensure your new objects are added to initialization scripts like `src/ts/common/pony.ts` or `src/ts/common/entities.ts`.
+**A. PSD Structure (Functional Layering)**
+The system uses specific layer naming to separate the functionality and coloring of in-game objects. The basic layer structure in a `.psd` file is:
+- `color`: This layer (or another object part name) defines the basic shape and color of the object. If it has a *palette* reference, the color in this layer can be dynamically swapped.
+- `shadow`: The shadow layer of the object with low opacity (typically 30%) so the lighting *renders* naturally over various *terrains*.
+- *Note:* For trees, the naming is more complex, such as `crown` (top leaves), `trunk` (main trunk), and `stump` (tree roots) which are colored separately. Numbered layers like `4:crown` are just group/folder names in *Photoshop* for neatness.
+
+**B. Naming Convention in Code**
+When `npx gulp dev --sprites` processes the `assets-source/` folder, the generator script will merge the folder and file name into a reference variable in *typescript*:
+- If you save the file `bakso_cart.psd` in the root `assets-source/objects/` folder, the script will generate a code reference: `sprites.bakso_cart`. To access its layers in code, you append the layer name (e.g., `sprites.bakso_cart.color` and `sprites.bakso_cart.shadow`).
+- If you save it in a sub-folder, e.g., `assets-source/objects/bench/1.psd`, the script combines the folder name, making the reference: `sprites.bench_1`. You access its layers via `sprites.bench_1.color` and `sprites.bench_1.shadow`.
+- If the file has a *palette* for color variations, it will be added into the `.palettes` array (e.g., `sprites.bench_1.palettes`).
+
+**C. Workflow for Adding New Objects (Example: Bakso Cart)**
+1. **File Placement**: Save your design file (e.g., `bakso_cart.psd`) into the `assets-source/objects/` directory. Ensure it has a layer named `color` and (optionally) `shadow`.
+2. **Compilation (Sprite Generator)**: Run the terminal command `npx gulp dev --sprites` to register the asset and generate the `.bin`/.`raw` *sprite sheet*. This file also automatically updates the *cache* file in `src/ts/generated/sprites.ts`.
+3. **Code Registration**: Open the `src/ts/common/entities.ts` file and register the object entity so it is recognized by the client and server. Example code call using the generated layers:
+   ```typescript
+   export const baksoCart = doodad(
+       n('bakso-cart'),
+       sprites.bakso_cart.color, // Passing the specific color layer
+       30, 15, 0,
+       mixColliderRect(-20, -10, 40, 20)
+   );
+   ```
+   *`sprites.bakso_cart.color` directly calls the layer you named `color` in your `bakso_cart.psd` file.*
+
+**D. Handling PNG vs PSD Files**
+- `.psd` extensions are used specifically for interactive/complex objects that require layering functionality (shadows, trunks, color palettes, overlapping clothing transparency).
+- `.png` extensions are strictly used for **Static Assets** (such as *UI Buttons*, *Icons*, *Lights*/glowing effects, and terrain *Tilesets*). These files are rendered purely flat and do not require palette manipulation logic. Do not delete static `.png` files in `assets-source/` unless you are modifying the *source code* dependencies.
 
 #### Modifying Gameplay & Interactive Entities
 Adding custom gameplay logic involves defining new objects (Entities) and how players interact with them (InteractActions, items, events).
@@ -694,6 +730,8 @@ cp config-template.json config.json
 node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 ```
 
+By default, Docker uses "npm run build-fast". Please adjust the Dockerfile in the /docker/ directory to "npm run build-beta" if you want to run beta features (--beta) and tools (/tools/).
+
 4. Build and run:
 
 ```bash
@@ -819,8 +857,8 @@ Kemudian edit file `config.json` sesuai dengan kebutuhan Anda. Di bawah ini adal
   "servers": [ // Definisi setiap sub-server (game server) yang berjalan di kluster Anda
     {
       "id": "main", // ID Server internal (dipakai oleh CLI/startup script `--game main`)
-      "port": 8093, // Port Express HTTP (REST API game map)
-      "wsPort": 10093, // Port khusus uWebSockets untuk lalu-lintas WebSocket secara direct
+      "port": 8090, // Port Express HTTP (REST API game map)
+      "wsPort": 10090, // Port khusus uWebSockets untuk lalu-lintas WebSocket secara direct
       "path": "/s00/ws", // Rute WebSocket path yang dicocokkan dengan reverse proxy Apache/Nginx
       "local": "localhost:8090", // Alamat host lokal yang dituju sistem ketika membroadcast info ke map ini
       "name": "18+ Server", // Nama sub-server yang muncul di daftar pilihan lobi
@@ -975,8 +1013,9 @@ node pony-town.js --game dev    # Memulai server "dev" (di terminal terpisah)
 **Metode 2 (Fully Isolated Process / Mandiri)**
 
 Metode ini benar-benar memisahkan semuanya, termasuk memisah server login dengan server admin standalone.
+WAJIB mengubah port server main ("id": "main") pada config.json sebelum menjalankan ini, karena server login terpisah dari server main (game) jika tidak port akan bentrok. Dari port 8090 jadi 8093 dan wsPort dari 10090 jadi 10093.
 ```bash
-node pony-town.js --login --beta             # Menjalankan server Login (--beta bersifat opsional, gunakan hanya jika server main/dev Anda mengaktifkan flags "test" dan "editor")
+node pony-town.js --login --beta             # Menjalankan server Login (--beta bersifat opsional. Hanya berfungsi jika Anda sudah menjalankan "npm run build-beta", dan server memiliki flag "test" & "editor")
 node pony-town.js --admin --standaloneadmin  # Menjalankan server Admin
 node pony-town.js --game main                # Menjalankan server Main 18+
 node pony-town.js --game safe                # Menjalankan server Safe
@@ -997,7 +1036,12 @@ node pony-town.js --login --admin --game --tools --beta
 ```
 
 *Catatan Penting mengenai Fitur Beta:*
-1. **Konfigurasi Server:** Agar objek tes (seperti item yang bisa dipungut) dan alat map editor in-game benar-benar diizinkan, pastikan file `config.json` Anda memiliki `"test": true` dan `"editor": true` di dalam properti `flags` server yang dituju.
+1. **Konfigurasi Server:** Agar objek tes (seperti item yang bisa dipungut) dan alat map editor in-game benar-benar diizinkan, pastikan file `config.json` Anda memiliki objek JSON berikut di dalam properti `flags` server yang dituju:
+"flags": {
+  "test": true,
+  "editor": true
+}
+2. Ketergantungan Build: Argumen `--beta` hanya berfungsi jika Anda sudah menjalankan `npm run build-beta`. Jika Anda menjalankan `npm run build` atau `npm run build-fast`, fitur beta akan terhapus otomatis. Anda harus menjalankan `npm run build-beta` kembali untuk mengaktifkannya.
 
 #### Lingkungan Pengembangan (Development)
 
@@ -1051,19 +1095,23 @@ Sebelum memulai PM2 dan Proxy, Anda wajib melakukan penyesuaian di `config.json`
    "proxy": true,
    "host": "https://example.com/"
    ```
-2. Bagian ini bersifat opsional, boleh dibiarkan untuk edit map atau pada mode beta (`"flag": "test"` = khusus developer atau `"flag": "star"` = untuk supporter). Pastikan untuk menambahkan objek json berikut ini ke dalam pengaturan `dev` server di `config.json`:
-   ```json
-   "flags": {
-     "test": true,
-     "editor": true
-   },
-   ```
-   Jika ingin dihapus, hapus bagian Server dev `"id": "dev"` dari `config.json` dan hapus juga blok ini dari apache:
-   ```apacheconf
-   # Dev Server - WebSocket
-   ProxyPass "/s02/ws" "ws://localhost:10094/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
-   ProxyPassReverse "/s02/ws" "ws://localhost:10094/s02/ws"
-   ```
+2. Dev Server, bagian ini bersifat opsional, boleh dibiarkan untuk edit map, jika tetap dibiarkan jangan lupa jalankan "npm run build-beta".
+
+Jika ingin dihapus, hapus bagian Server dev dengan "id": "dev" dari config.json dan hapus juga blok ini dari apache:
+
+```apacheconf
+# Dev Server - WebSocket
+ProxyPass "/s02/ws" "ws://localhost:10094/s02/ws" flushpackets=on keepalive=On retry=0 timeout=3600 max=200 acquire=3000
+ProxyPassReverse "/s02/ws" "ws://localhost:10094/s02/ws"
+```
+
+Dan jalankan build standar (bukan beta) "npm run build" atau "npm run build-fast".
+
+Pastikan sudah menjalankan "npm run build-beta" jika mempertahankan server dev atau "npm run build-fast" jika sudah menghapus server dev dari config.json.
+
+3. WAJIB mengubah port server main ("id": "main") pada config.json sebelum Menjalankan PM2 karena server dijalankan sebagai "Fully Isolated Process / Mandiri".
+
+Dari port 8090 jadi 8093 dan wsPort dari 10090 jadi 10093.
 
 #### B. Menjalankan PM2
 
@@ -1288,11 +1336,38 @@ npx gulp dev --sprites
 ```
 Alat ini memanggil skrip internal seperti `create-sprites.ts` untuk memproses seluruh gambar (PNG, PSD) yang ada pada direktori `assets-source` menjadi sprite game yang dioptimasi untuk WebGL canvas.
 
-#### Menambahkan Asset (Pakaian / Objek Baru)
-Sistem dalam game ini bekerja berdasarkan *sprite sheets*.
-1. Tempatkan dan edit gambar animasi di folder `assets-source`.
-2. Gunakan `npx gulp dev --sprites` untuk men-generate gambar tersebut ke dalam cache sprite sheets. Anda bisa menambahkan file `src/ts/tools/trigger.txt` untuk re-trigger generasi otomatis.
-3. Daftarkan kode objek di script sistem seperti `src/ts/common/pony.ts`.
+#### Panduan Pengembangan Aset (Asset Development Guide)
+Sistem dalam game ini bekerja berdasarkan *sprite sheets* yang di-*generate* dari file `.psd` maupun `.png`. Untuk memastikan visual, *shadow*, dan efek warna musim (season) berfungsi baik di dalam game, berikut adalah alur kerja standar pengembangan aset:
+
+**A. Struktur Layer PSD (Functional Layering)**
+Sistem menggunakan penamaan layer secara spesifik untuk memisahkan fungsionalitas dan pewarnaan objek in-game. Struktur dasar layer dalam file `.psd`:
+- `color`: Layer ini (atau nama bagian objek lainnya) mendefinisikan bentuk dasar dan warna objek. Jika memiliki referensi *palette*, warna di layer ini dapat ditukar secara dinamis.
+- `shadow`: Layer bayangan objek dengan opasitas rendah (umumnya 30%) agar pencahayaan *render* terlihat natural di atas dataran (terrain) yang bervariasi.
+- *Catatan:* Untuk pohon (trees), penamaannya lebih kompleks, seperti `crown` (dedaunan atas), `trunk` (batang utama), dan `stump` (akar pohon) yang diwarnai terpisah. Layer bernomor seperti `4:crown` hanya penamaan grup/folder dalam *Photoshop* agar rapi.
+
+**B. Konvensi Penamaan (Naming Convention) pada Kode**
+Ketika `npx gulp dev --sprites` memproses folder `assets-source/`, skrip generator akan menyatukan nama folder dan file menjadi variabel referensi di *typescript*:
+- Jika Anda menyimpan file `bakso_cart.psd` di dalam folder root `assets-source/objects/`, skrip akan menghasilkan referensi kode: `sprites.bakso_cart`. Untuk memanggil layernya di dalam kode, Anda harus menambahkan nama layernya (contoh: `sprites.bakso_cart.color` dan `sprites.bakso_cart.shadow`).
+- Jika Anda menyimpan di sub-folder, misal `assets-source/objects/bench/1.psd`, skrip menggabungkan nama foldernya, sehingga referensinya menjadi: `sprites.bench_1`. Pemanggilan layernya menjadi `sprites.bench_1.color` dan `sprites.bench_1.shadow`.
+- Jika file memiliki *palette* untuk variasi warna, ia akan masuk ke dalam array `.palettes` (contoh: `sprites.bench_1.palettes`).
+
+**C. Alur Penambahan Objek Baru (Contoh: Bakso Cart)**
+1. **Penempatan File**: Simpan file desain (misal: `bakso_cart.psd`) ke dalam direktori `assets-source/objects/`. Pastikan Anda menamai layer gambar utamanya sebagai `color` dan layer bayangannya sebagai `shadow`.
+2. **Kompilasi (Sprite Generator)**: Jalankan perintah terminal `npx gulp dev --sprites` untuk mendaftarkan aset dan menghasilkan *sprite sheet* `.bin`/.`raw`. File ini juga secara otomatis memperbarui file *cache* di `src/ts/generated/sprites.ts`.
+3. **Registrasi Kode**: Buka file `src/ts/common/entities.ts` dan daftarkan entitas objek tersebut agar dikenali oleh klien dan server. Contoh nyata pemanggilan kodenya dengan memanggil layer spesifik:
+   ```typescript
+   export const baksoCart = doodad(
+       n('bakso-cart'),
+       sprites.bakso_cart.color, // Mengacu pada layer "color" di dalam psd
+       30, 15, 0,
+       mixColliderRect(-20, -10, 40, 20)
+   );
+   ```
+   *`sprites.bakso_cart.color` langsung memanggil gambar yang ada di layer `color` pada file `bakso_cart.psd` Anda.*
+
+**D. Penanganan File PNG vs PSD**
+- File ekstensi `.psd` digunakan secara khusus untuk objek interaktif/kompleks yang membutuhkan fungsionalitas layering (bayangan, batang, palet warna, transparansi tumpukan pakaian).
+- File ekstensi `.png` digunakan khusus sebagai **Static Assets** (seperti *UI Buttons*, *Icons*, efek bercahaya/Lights, dan *Tileset* dataran). File ini murni di-*render* datar dan tidak memerlukan logika manipulasi sistem palette. Jangan menghapus file statik `.png` di dalam `assets-source/` kecuali Anda mengubah dependensi *source code*.
 
 #### Modifikasi Gameplay & Entitas Interaktif
 Untuk memodifikasi logika game, menambah event, atau membuat objek map yang dapat berinteraksi dengan player (contoh: meja tempat mengambil makanan), ikuti panduan berikut:
@@ -1422,6 +1497,8 @@ cp config-template.json config.json
 ```bash
 node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 ```
+
+Secara standar, Docker menggunakan "npm run build-fast". Silakan sesuaikan Dockerfile pada direktori /docker/ menjadi "npm run build-beta" jika Anda ingin menjalankan fitur beta (--beta) dan tools (/tools/).
 
 4. Build dan jalankan:
 
