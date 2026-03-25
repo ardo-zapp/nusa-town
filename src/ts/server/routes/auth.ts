@@ -239,7 +239,7 @@ export function authRoutes(
 
 	providers.filter(p => !!p.auth).forEach(({ id, strategy, auth, connectOnly, additionalOptions = {} }) => {
 		const callbackURL = `${host}auth/${id}/callback`;
-		const scope = id === 'patreon' ? ['identity', 'identity[email]'] : id === 'discord' ? ['identify', 'email'] : ['email'];
+		const scope = id === 'patreon' ? ['identity', 'identity[email]'] : id === 'discord' ? ['identify', 'email'] : id === 'tiktok' ? ['user.info.basic'] : ['email'];
 		const options = {
 			...additionalOptions,
 			...auth,

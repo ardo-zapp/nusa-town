@@ -4,7 +4,61 @@ import { Request } from 'express';
 import { isString } from 'lodash';
 import { Strategy as GoogleStrategy } from '@passport-next/passport-google-oauth2';
 import { Strategy as TwitterStrategy } from 'passport-twitter';
+import { Strategy as TikTokStrategyBase } from 'passport-tiktok-auth';
 import { Strategy as GithubStrategy } from 'passport-github2';
+
+class TikTokStrategy extends TikTokStrategyBase {
+	constructor(options: any, verify: any) {
+		super(options, verify);
+		(this as any).fields = [
+			'open_id',
+			'avatar_url',
+			'display_name'
+		];
+	}
+
+	authorizationParams(options: any) {
+		const params = super.authorizationParams(options);
+		params.client_key = (this as any)._oauth2._clientId;
+		return params;
+	}
+
+	userProfile(accessToken: string, _done: any) {
+		const authData = arguments.length > 2 ? arguments[1] : undefined;
+		const actualDone = arguments.length > 2 ? arguments[2] : arguments[1];
+
+		const oauth2 = (this as any)._oauth2;
+		const fields = '?fields=' + (this as any).fields.join(',');
+
+		oauth2.get((this as any)._profileURL + fields, accessToken, (err: any, body: any, _res: any) => {
+			if (err) {
+				return actualDone(new Error('Failed to fetch user profile: ' + (err.data || err.message || err)));
+			}
+
+			try {
+				const json = JSON.parse(body);
+				const user = json.data && json.data.user ? json.data.user : json;
+
+				const profile: any = {
+					provider: 'tiktok',
+					id: user.open_id || user.id || authData?.open_id,
+					unionId: user.union_id,
+					username: user.username || user.display_name,
+					displayName: user.display_name,
+					profileImage: user.avatar_url_100 || user.avatar_url,
+					bioDescription: user.bio_description,
+					profileDeepLink: user.profile_deep_link,
+					_raw: body,
+					_json: json
+				};
+
+				actualDone(null, profile);
+			} catch (e) {
+				actualDone(e);
+			}
+		});
+	}
+}
 import { Strategy as VKontakteStrategy } from 'passport-vkontakte';
 import { Strategy as PatreonStrategy } from 'passport-patreon';
 import { Strategy as DiscordStrategy } from 'passport-discord';
@@ -57,7 +111,7 @@ const providerList: OAuthProviderInfo[] = [
 		id: 'google',
 		name: 'Google',
 		color: '#DC4A3D',
-		connectOnly: false,
+		connectOnly: true,
 		strategy: GoogleStrategy,
 	},
 	{
@@ -91,6 +145,13 @@ const providerList: OAuthProviderInfo[] = [
 		name: 'Discord',
 		color: '#7289DA',
 		strategy: DiscordStrategy,
+	},
+	{
+		id: 'tiktok',
+		name: 'TikTok',
+		color: '#FFFFFF',
+		connectOnly: false,
+		strategy: TikTokStrategy,
 	},
 ];
 
