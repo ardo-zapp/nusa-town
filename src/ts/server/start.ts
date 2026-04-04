@@ -25,7 +25,7 @@ export function start(world: World, server: ServerConfig) {
 		width: 512,
 		height: 512,
 		data: new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength),
-	};
+	} as ImageData;
 
 	initializeTileHeightmaps();
 

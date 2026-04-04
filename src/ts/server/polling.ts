@@ -78,21 +78,19 @@ export async function updatePastSupporters() {
 		areFlagged.add(account._id.toString());
 	}
 
-	for (const auth of auths) {
-		if (auth.account) {
-			if (!areFlagged.has(auth.account.toString())) {
-				await Account.updateOne({ _id: auth.account }, { $bit: { supporter: { or: SupporterFlags.PastSupporter } } }).exec();
-			}
-		}
+	const toAdd = Array.from(shouldBeFlagged).filter(id => !areFlagged.has(id));
+
+	if (toAdd.length > 0) {
+		await updateAccounts({ _id: { $in: toAdd } }, { $bit: { supporter: { or: SupporterFlags.PastSupporter } } } as any);
 	}
 
-	for (const account of accounts) {
-		if (!shouldBeFlagged.has(account._id.toString())) {
-			await Account.updateOne({ _id: account._id }, { $bit: { supporter: { and: ~SupporterFlags.PastSupporter } } }).exec();
-		}
+	const toRemove = Array.from(areFlagged).filter(id => !shouldBeFlagged.has(id));
+
+	if (toRemove.length > 0) {
+		await updateAccounts({ _id: { $in: toRemove } }, { $bit: { supporter: { and: ~SupporterFlags.PastSupporter } } } as any);
 	}
 
-	logPerformance(`[async] cleanupAccountAlerts (${Date.now() - start}ms)`);
+	logPerformance(`[async] updatePastSupporters (${Date.now() - start}ms)`);
 }
 
 const cleanupStrayAuths = (removedDocument: RemovedDocument) =>
@@ -103,7 +101,7 @@ const cleanupStrayAuths = (removedDocument: RemovedDocument) =>
 		const items = await queryAuths(query, '_id');
 		await Auth.deleteMany(query).exec();
 		await Bluebird.map(items, item => removedDocument('auths', item._id.toString()), { concurrency: 4 });
-		logPerformance(`[async] cleanupAccountAlerts (${Date.now() - start}ms)`);
+		logPerformance(`[async] cleanupStrayAuths (${Date.now() - start}ms)`);
 	};
 
 async function updateServerState(server: InternalGameServerState | InternalLoginServerState) {

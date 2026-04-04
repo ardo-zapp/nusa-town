@@ -96,6 +96,7 @@ export function createIndex(assetsPath: string, adminAssetsPath: string) {
 		{ isPublic, style, script, scriptES, production, noindex, base, socketOptions, token, local, wdsUrl }: PageOptions
 	) {
 		return template({
+			mockLogin: config.mockLogin,
 			doctype: 'html',
 			wdsUrl,
 			host: config.host,
@@ -113,7 +114,7 @@ export function createIndex(assetsPath: string, adminAssetsPath: string) {
 			sw: config.sw ? 'true' : undefined,
 			noindex: noindex || config.noindex,
 			production,
-			local: local ? 'true' : undefined,
+			local: (local || config.mockLogin) ? 'true' : undefined,
 			socketOptions: encodeSocketOptions(socketOptions),
 			inlineStyle,
 			style,

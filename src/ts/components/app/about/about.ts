@@ -9,8 +9,7 @@ import { discordLink, contactEmail, contactDiscord } from '../../../client/data'
 function toCredit(credit: Credit) {
 	return {
 		...credit,
-		background: `url(${getUrl('images/avatars.jpg')})`,
-		position: `${(credit.avatarIndex % 4) * -82}px ${Math.floor(credit.avatarIndex / 4) * -82}px`,
+		background: `url(${getUrl('images/avatar/' + credit.avatarImage)})`,
 	};
 }
 

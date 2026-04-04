@@ -95,6 +95,7 @@ export function mockClient(fields: any = {}): IClient {
 		saysQueue: [],
 		lastSays: [],
 		lastBoopAction: 0,
+		lastBoopOrKissAction: 0,
 		lastExpressionAction: 0,
 		viewWidth: 3,
 		viewHeight: 3,

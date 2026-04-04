@@ -79,8 +79,7 @@ export class Shader {
 			uniforms[info.name] = gl.getUniformLocation(program, info.name);
 
 			if (!uniforms[info.name]) {
-				//throw new Error(`Failed to get uniform location (${info.name})`);
-				console.log(`Warning: Failed to get uniform location (${info.name})`);
+				console.warn(`Failed to get uniform location (${info.name})`);
 			}
 
 			if (info.type === gl.SAMPLER_2D) {

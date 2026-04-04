@@ -43,22 +43,45 @@ export const adminServer = config.adminLocal && !args.admin ? {
 export const servers: InternalGameServerState[] = [];
 
 if (args.login || args.admin) {
-	servers.push(...gameServers.map(s => ({
-		id: s.id,
-		state: {
-			...s,
-			offline: true,
-			dead: true,
-			maps: 0,
-			online: 0,
-			onMain: 0,
-			queued: 0,
-			shutdown: false,
-			filter: false,
-			settings: {},
-		},
-		api: createApi<InternalApi>(s.local, 'api-internal', config.token),
-	})));
+	servers.push(...gameServers.map(s => {
+		let host = s.host || config.host;
+
+		if (host) {
+			try {
+				// Normalize string to ensure URL parser can safely extract the hostname
+				const urlString = host.includes('://') ? host : `http://${host}`;
+				const parsedUrl = new URL(urlString);
+				
+				// Strip protocols. Let the client handle ws:// or wss:// prefix.
+				if (config.proxy) {
+					host = parsedUrl.hostname;
+				} else {
+					const wsPort = s.wsPort || (s.port + 2000);
+					host = `${parsedUrl.hostname}:${wsPort}`;
+				}
+			} catch (e) {
+				logger.error(`Invalid host: ${host}`);
+			}
+		}
+
+		return {
+			id: s.id,
+			state: {
+				...s,
+				host,
+				offline: true,
+				dead: true,
+				maps: 0,
+				online: 0,
+				onMain: 0,
+				queued: 0,
+				shutdown: false,
+				filter: false,
+				settings: {},
+			},
+			api: createApi<InternalApi>(s.local, 'api-internal', config.token),
+		};
+	}));
 }
 
 export function findServer(id: string) {

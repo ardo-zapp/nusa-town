@@ -449,7 +449,9 @@ export function updateEntityPlayerState(client: IClient, entity: ServerEntity) {
 // actions
 
 export function turnHead(client: IClient) {
-	updateEntityState(client.pony, client.pony.state ^ EntityState.HeadTurned);
+	if (canPerformAction(client)) {
+		updateEntityState(client.pony, client.pony.state ^ EntityState.HeadTurned);
+	}
 }
 
 const purpleGrapeTypes = entities.grapesPurple.map(x => x.type);

@@ -1,6 +1,9 @@
 const webpack = require('webpack');
 const path = require('path');
 
+const autoprefixer = require('autoprefixer');
+const cssnano = require('cssnano');
+
 module.exports = {
 	context: path.join(__dirname, 'src'),
 	output: {
@@ -16,20 +19,20 @@ module.exports = {
 			{
 				test: /\.js$/,
 				use: ['angular2-template-loader'],
-				exclude: [/node_modules/],
+				exclude: /node_modules/,
 			},
 			{
 				test: /\.css$/,
-				use: ['raw-loader'],
+				use: [{ loader: 'raw-loader', options: { esModule: false } }],
 			},
 			{
 				test: /\.html$/,
-				use: ['raw-loader'],
+				use: [{ loader: 'raw-loader', options: { esModule: false } }],
 			},
 			{
 				test: /\.pug$/,
 				use: [
-					'raw-loader',
+					{ loader: 'raw-loader', options: { esModule: false } },
 					{
 						loader: 'pug-html-loader',
 						query: { doctype: 'html', plugins: require('pug-plugin-ng') },
@@ -39,20 +42,24 @@ module.exports = {
 			{
 				test: /\.scss$/,
 				use: [
-					'raw-loader',
+					{ loader: 'raw-loader', options: { esModule: false } },
 					{
 						loader: 'postcss-loader',
 						options: {
 							ident: 'postcss',
-							plugins: loader => [
-								require('autoprefixer')({ overrideBrowserslist: ['last 2 versions'] }),
-								require('cssnano')({ preset: ['default', { discardComments: { removeAll: true } }] }),
+							plugins: () => [
+								autoprefixer({ overrideBrowserslist: ['last 2 versions'] }),
+								cssnano({ preset: ['default', { discardComments: { removeAll: true } }] }),
 							],
 						},
 					},
 					{
 						loader: 'sass-loader',
-						options: { includePaths: ['src/styles'], silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin', 'color-functions', 'slash-div'], quietDeps: true },
+						options: {
+							includePaths: ['src/styles'],
+							silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin', 'color-functions', 'slash-div'],
+							quietDeps: true
+						},
 					},
 				],
 			},
@@ -66,7 +73,7 @@ module.exports = {
 	},
 	plugins: [
 		new webpack.ContextReplacementPlugin(
-			/\@angular(\\|\/)core(\\|\/)fesm5/,
+			/@angular([\\/])core/,
 			path.resolve(__dirname, 'src', 'ts'),
 			{}
 		),

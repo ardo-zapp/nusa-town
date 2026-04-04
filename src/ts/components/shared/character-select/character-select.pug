@@ -1,44 +1,101 @@
-.sr-only(#ariaAnnounce aria-live="assertive")
+.sr-only(#ariaAnnounce, aria-live="assertive")
 
 .character-select.input-group
-	.input-group-prepend(*ngIf="emojiButton" style="position: relative;")
-		button.btn.btn-default.character-emoji-button([emote]="btnEmoji" (click)="toggleEmojiBox()" aria-label="Emoji picker" title="Emoji picker" style="padding-top: 1px; padding-bottom: 0;")
+	//- ========================
+	//- Emoji Button Section
+	//- ========================
+	.input-group-prepend(*ngIf="emojiButton", style="position: relative;")
+		button.btn.btn-default.character-emoji-button(
+			(click)="toggleEmojiBox()",
+			aria-label="Emoji picker",
+			title="Emoji picker",
+			style="padding-top: 1px; padding-bottom: 0;"
+		)
 			emote-box([emote]="btnEmoji")
+
 		.emotes.emoji-box-top([style.display]="emojiBoxState")
 			ul
-				li(*ngFor="let e of emotes" (click)="addEmoji(e.symbol, e.names[0])")
+				li(*ngFor="let e of emotes", (click)="addEmoji(e.symbol, e.names[0])")
 					span.emote-sample.mr-2
 						emote-box([emote]="e.names[0]")
+
+	//- ========================
+	//- Character Name Input
+	//- ========================
 	input.form-control.text-center(
-		#nameInput
-		type="text"
-		[(ngModel)]="pony.name"
-		[maxlength]="maxNameLength"
-		placeholder="Name of your character"
-		aria-label="Name of your character")
+		#nameInput,
+		type="text",
+		[(ngModel)]="pony.name",
+		[maxlength]="maxNameLength",
+		placeholder="Name of your character",
+		aria-label="Name of your character"
+	)
+
+	//- ========================
+	//- Action Buttons & Dropdown
+	//- ========================
 	.input-group-append
-		button.btn.btn-default(*ngIf="newButton" (click)="createNew()" [disabled]="!canNew" aria-label="Create New character")
-			| new
-		button.btn.btn-default(*ngIf="editButton" (click)="edit()" [disabled]="!canEdit" aria-label="Edit character")
-			| edit
+		button.btn.btn-default(
+			*ngIf="newButton",
+			(click)="createNew()",
+			[disabled]="!canNew",
+			aria-label="Create New character"
+		) new
 
-		.dropdown(dropdown #dropdown="ag-dropdown" (isOpenChange)="onToggle($event)" [focusOnOpen]="false")
+		button.btn.btn-default(
+			*ngIf="editButton",
+			(click)="edit()",
+			[disabled]="!canEdit",
+			aria-label="Edit character"
+		) edit
+
+		.dropdown(
+			dropdown,
+			#dropdown="ag-dropdown",
+			(isOpenChange)="onToggle($event)",
+			[focusOnOpen]="false"
+		)
 			button.btn.btn-default.dropdown-toggle.br-0(
-				[ngClass]="removeButton ? 'btn-no-round' : 'btn-no-round-left'"
-				[disabled]="!hasPonies || joining" dropdownToggle aria-label="Select character")
-			character-list.dropdown-menu(
-				*dropdownMenu (close)="dropdown.close()" (selectCharacter)="select($event)" (newCharacter)="createNew()"
-				(previewCharacter)="preview.emit($event)" [canNew]="!newButton && canNew")
+				[ngClass]="removeButton ? 'btn-no-round' : 'btn-no-round-left'",
+				[disabled]="!hasPonies || joining",
+				dropdownToggle,
+				aria-label="Select character"
+			)
 
+			character-list.dropdown-menu(
+				*dropdownMenu,
+				(close)="dropdown.close()",
+				(selectCharacter)="select($event)",
+				(newCharacter)="createNew()",
+				(previewCharacter)="preview.emit($event)",
+				[canNew]="!newButton && canNew"
+			)
+
+		//- ========================
+		//- Delete & Confirm Actions
+		//- ========================
 		button.btn.btn-danger.remove-button(
-			*ngIf="removeButton && !removing" (click)="remove()" [disabled]="!canRemove"
-			tooltip="Delete pony" aria-label="Delete pony")
-			fa-icon([icon]="deleteIcon" [fixedWidth]="true")
+			*ngIf="removeButton && !removing",
+			(click)="remove()",
+			[disabled]="!canRemove",
+			tooltip="Delete pony",
+			aria-label="Delete pony"
+		)
+			fa-icon([icon]="deleteIcon", [fixedWidth]="true")
+
 		button.btn.btn-danger.cancel-remove-button(
-			*ngIf="removing" (click)="cancelRemove()"
-			tooltip="Cancel delete" aria-label="Cancel delete")
-			fa-icon([icon]="removeIcon" [fixedWidth]="true")
+			*ngIf="removing",
+			(click)="cancelRemove()",
+			tooltip="Cancel delete",
+			aria-label="Cancel delete"
+		)
+			fa-icon([icon]="removeIcon", [fixedWidth]="true")
+
 		button.btn.btn-success(
-			*ngIf="removing" (click)="confirmRemove()" [disabled]="!canRemove"
-			tooltip="Confirm delete" aria-label="Confirm delete")
-			fa-icon([icon]="confirmIcon" [fixedWidth]="true")
+			*ngIf="removing",
+			(click)="confirmRemove()",
+			[disabled]="!canRemove",
+			tooltip="Confirm delete",
+			aria-label="Confirm delete"
+		)
+			fa-icon([icon]="confirmIcon", [fixedWidth]="true")

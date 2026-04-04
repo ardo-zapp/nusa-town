@@ -160,8 +160,8 @@ describe('api internal', () => {
 		let liveSettings: ServerLiveSettings;
 
 		beforeEach(() => {
-			account = { save() { }, _id: new Types.ObjectId('5983e1f7519f95530becdf7d') } as any;
-			character = { save() { }, _id: new Types.ObjectId('5983e1f7519f95530becdf7a') } as any;
+			account = { save() { }, _id: new Types.ObjectId() as any } as any;
+			character = { save() { }, _id: new Types.ObjectId() as any } as any;
 			world = mock(World);
 			server = { id: 'foo' } as any;
 			settings = {};
@@ -284,7 +284,7 @@ describe('api internal', () => {
 
 		it('sets up character social site', async () => {
 			const site = {};
-			const siteId = new Types.ObjectId('5983e1f7519f95530becdf70');
+			const siteId = new Types.ObjectId() as any;
 			findAuth.withArgs(siteId, account._id).resolves(site);
 			character.site = siteId;
 
@@ -294,7 +294,7 @@ describe('api internal', () => {
 		});
 
 		it('does not set up character social site if its missing', async () => {
-			const siteId = new Types.ObjectId('5983e1f7519f95530becdf70');
+			const siteId = new Types.ObjectId() as any;
 			findAuth.withArgs(siteId, account._id).resolves(undefined);
 			character.site = siteId;
 
@@ -305,7 +305,7 @@ describe('api internal', () => {
 
 		it('does not set up character social site if its disabled', async () => {
 			const site = { disabled: true };
-			const siteId = new Types.ObjectId('5983e1f7519f95530becdf70');
+			const siteId = new Types.ObjectId() as any;
 			findAuth.withArgs(siteId, account._id).resolves(site);
 			character.site = siteId;
 
@@ -316,7 +316,7 @@ describe('api internal', () => {
 
 		it('does not set up character social site if its banned', async () => {
 			const site = { banned: true };
-			const siteId = new Types.ObjectId('5983e1f7519f95530becdf70');
+			const siteId = new Types.ObjectId() as any;
 			findAuth.withArgs(siteId, account._id).resolves(site);
 			character.site = siteId;
 

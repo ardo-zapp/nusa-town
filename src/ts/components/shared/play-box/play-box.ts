@@ -156,7 +156,7 @@ export class PlayBox implements OnInit {
 		this.gameService.leave('Cancelled joining');
 	}
 	reload() {
-		location.reload(true);
+		location.reload();
 	}
 	hardReload() {
 		hardReload();

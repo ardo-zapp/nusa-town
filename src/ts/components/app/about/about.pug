@@ -31,8 +31,7 @@ h1(focusTitle) About
 						.team-member
 							.team-avatar.float-left(
 								[style.background-image]="c.background"
-								[style.background-position]="c.position"
-								style="background-size: 328px 246px")
+								style="background-size: cover; background-position: center;")
 							b.text-truncate.sno {{c.name}}
 							.text-muted {{c.title}}
 							site-links([links]="c.links")
@@ -56,8 +55,7 @@ h1(focusTitle) About
 
 		div(*ngFor="let v of changelog")
 			h4 {{v.version}}
-			ul
-				li(*ngFor="let c of v.changes" [innerHTML]="c")
+			div([innerHTML]="v.html")
 
 .text-center.text-muted
 	.tinyface

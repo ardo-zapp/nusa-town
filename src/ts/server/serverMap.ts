@@ -78,7 +78,8 @@ export function createServerMap(
 	return {
 		id, usage, type, flags: MapFlags.None, width, height, state, regions, regionsX, regionsY, defaultTile, spawnArea,
 		lockedTiles, spawns: new Map(), instance: undefined, lastUsed: Date.now(), controllers: [],
-		dontUpdateTilesAndColliders: false, tilesLocked: false, editableEntityLimit: 0, editingLocked: false,
+		dontUpdateTilesAndColliders: false, tilesLocked: false, editableEntityLimit: 0,
+		totalEditableEntities: 0, editingLocked: false,
 	};
 }
 
@@ -94,7 +95,7 @@ export function serverMapInstanceFromTemplate(map: ServerMap): ServerMap {
 		regionsX, regionsY, defaultTile, spawnArea,
 		lockedTiles, spawns: new Map(), instance: undefined, lastUsed: Date.now(), controllers: [],
 		dontUpdateTilesAndColliders: true, tilesLocked: map.tilesLocked,
-		editableEntityLimit, editingLocked: false,
+		editableEntityLimit, totalEditableEntities: map.totalEditableEntities, editingLocked: false,
 	};
 }
 

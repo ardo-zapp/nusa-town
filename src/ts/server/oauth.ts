@@ -62,6 +62,7 @@ class TikTokStrategy extends TikTokStrategyBase {
 import { Strategy as VKontakteStrategy } from 'passport-vkontakte';
 import { Strategy as PatreonStrategy } from 'passport-patreon';
 import { Strategy as DiscordStrategy } from 'passport-discord';
+import { Strategy as SteamStrategy } from 'passport-steam';
 import { Profile } from '../common/interfaces';
 import { PATREON_COLOR } from '../common/colors';
 import { colorToCSS } from '../common/color';
@@ -153,6 +154,13 @@ const providerList: OAuthProviderInfo[] = [
 		connectOnly: false,
 		strategy: TikTokStrategy,
 	},
+	{
+		id: 'steam',
+		name: 'Steam',
+		color: '#171A21',
+		connectOnly: false,
+		strategy: SteamStrategy,
+	},
 ];
 
 providerList.forEach(p => p.auth = config.oauth[p.id]);
@@ -169,6 +177,8 @@ export function getProfileUrl(profile: OAuthProfile): string | undefined {
 		return undefined;
 	} else if (profile._json.attributes && profile._json.attributes.url) { // patreon
 		return profile._json.attributes.url;
+	} else if (profile.provider === 'steam') {
+		return profile._json.profileurl;
 	} else {
 		return profile.profileUrl || profile._json.url;
 	}

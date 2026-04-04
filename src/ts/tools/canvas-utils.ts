@@ -180,7 +180,22 @@ export function saveCanvas(filePath: string, canvas: HTMLCanvasElement) {
 }
 
 function getColorAt(d: Uint8ClampedArray, i: number) {
-	return ((d[i] << 24) | (d[i + 1] << 16) | (d[i + 2] << 8) | d[i + 3]) >>> 0;
+	const a = d[i + 3];
+	
+	// [Developer Note] Patch for Canvas 3.x (Node 24+):
+	// Return absolute 0 if fully transparent to prevent RGB noise from premultiplied alpha.
+	if (a === 0) return 0;
+	
+	// Un-premultiply RGB values to recover original color for strict palette matching.
+	if (a < 255) {
+		const r = Math.min(255, Math.round((d[i] * 255) / a));
+		const g = Math.min(255, Math.round((d[i + 1] * 255) / a));
+		const b = Math.min(255, Math.round((d[i + 2] * 255) / a));
+		return ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
+	}
+
+	// Normal opaque pixel calculation
+	return ((d[i] << 24) | (d[i + 1] << 16) | (d[i + 2] << 8) | a) >>> 0;
 }
 
 export function forEachPixel(canvas: ExtCanvas, action: (color: number, x: number, y: number) => void) {
@@ -188,7 +203,7 @@ export function forEachPixel(canvas: ExtCanvas, action: (color: number, x: numbe
 
 	for (let y = 0, i = 0; y < data.height; y++) {
 		for (let x = 0; x < data.width; x++ , i += 4) {
-			action(getColorAt(data.data, i), x, y);
+			action(((data.data[i] << 24) | (data.data[i + 1] << 16) | (data.data[i + 2] << 8) | data.data[i + 3]) >>> 0, x, y);
 		}
 	}
 }
@@ -219,7 +234,8 @@ export function mapEachPixel(canvas: ExtCanvas, action: MapColor) {
 
 	for (let y = 0, i = 0; y < data.height; y++) {
 		for (let x = 0; x < data.width; x++ , i += 4) {
-			const c = ((d[i] << 24) | (d[i + 1] << 16) | (d[i + 2] << 8) | d[i + 3]) >>> 0;
+			// [Developer Note] Canvas 3.x Patch: Leverage the patched getColorAt to maintain palette consistency
+			const c = getColorAt(d, i);
 			const out = action(c, x, y);
 			d[i] = (out >>> 24) & 0xff;
 			d[i + 1] = (out >>> 16) & 0xff;

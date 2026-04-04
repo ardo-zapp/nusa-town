@@ -115,7 +115,7 @@ function getIndex(x: number, y: number, outputWidth: number) {
 	return ((x | 0) + (((y | 0) * outputWidth) | 0)) | 0;
 }
 
-function isEmpty(x: number, y: number, w: number, h: number, outputWidth: number, taken: Uint8Array) {
+function isEmpty(x: number, y: number, w: number, h: number, outputWidth: number, lines: Line[][]) {
 	outputWidth = outputWidth | 0;
 
 	if (((x + w) | 0) > outputWidth || ((y + h) | 0) > outputWidth) {
@@ -123,10 +123,20 @@ function isEmpty(x: number, y: number, w: number, h: number, outputWidth: number
 	}
 
 	for (let iy = 0; iy < h; iy++) {
-		for (let ix = 0; ix < w; ix++) {
-			if (taken[getIndex((ix + x) | 0, (iy + y) | 0, outputWidth)] !== 0) {
-				return false;
+		const spans = lines[(y + iy) | 0];
+		let found = false;
+
+		for (let i = 0; i < spans.length; i++) {
+			const span = spans[i];
+
+			if (x >= span.start && (x + w) <= (span.start + span.length)) {
+				found = true;
+				break;
 			}
+		}
+
+		if (!found) {
+			return false;
 		}
 	}
 
@@ -140,10 +150,9 @@ interface Line {
 
 interface Taken {
 	lines: Line[][];
-	data: Uint8Array; // TODO: remove completely, just use lines
 }
 
-function getFirstFree(outputWidth: number, width: number, height: number, { data, lines }: Taken) {
+function getFirstFree(outputWidth: number, width: number, height: number, { lines }: Taken) {
 	const maxY = (outputWidth - height) | 0;
 
 	for (let y = 0; y < maxY; y = (y + 1) | 0) {
@@ -155,7 +164,7 @@ function getFirstFree(outputWidth: number, width: number, height: number, { data
 			const end = (start + span.length - width) | 0;
 
 			for (let x = start; x < end; x = (x + 1) | 0) {
-				if (isEmpty(x, y, width, height, outputWidth, data)) {
+				if (isEmpty(x, y, width, height, outputWidth, lines)) {
 					return { x, y, layer: 0 };
 				}
 			}
@@ -169,7 +178,7 @@ function getFirstFreePacked(outputWidth: number, width: number, height: number, 
 	const maxY = outputWidth - height;
 
 	for (let layer = 0; layer < takens.length; layer = (layer + 1) | 0) {
-		const { data, lines } = takens[layer];
+		const { lines } = takens[layer];
 
 		for (let y = 0; y < maxY; y = (y + 1) | 0) {
 			const spans = lines[y];
@@ -180,7 +189,7 @@ function getFirstFreePacked(outputWidth: number, width: number, height: number, 
 				const end = (start + span.length - width) | 0;
 
 				for (let x = start | 0; x < end; x = (x + 1) | 0) {
-					if (isEmpty(x, y, width, height, outputWidth, data)) {
+					if (isEmpty(x, y, width, height, outputWidth, lines)) {
 						return { x, y, layer };
 					}
 				}
@@ -205,16 +214,11 @@ function positionSprite(sprite: ExtSprite, outputWidth: number, taken: Taken[], 
 	const right = x + w;
 
 	for (let il = 0; il < layers; il++) {
-		const { data, lines } = taken[il + layer];
+		const { lines } = taken[il + layer];
 
 		for (let iy = 0; iy < sprite.h; iy++) {
 			const yy = y + iy;
 			const spans = lines[yy];
-
-			for (let ix = 0; ix < sprite.w; ix++) {
-				const xx = x + ix;
-				data[getIndex(xx, yy, outputWidth)] = 1;
-			}
 
 			for (let i = 0; i < spans.length; i++) {
 				const span = spans[i];
@@ -290,7 +294,7 @@ function getSpriteImageData(s: ExtSprite): ImageData | undefined {
 
 	const context = s.image.getContext('2d')!;
 	const { width, height, data } = context.getImageData(s.ox, s.oy, s.w, s.h);
-	return { width, height, data };
+	return { width, height, data } as ImageData;
 }
 
 export function createSpriteSheet(name: string, images: ExtSprite[], log: boolean, size: number, bg?: string, pack = false) {
@@ -365,7 +369,6 @@ export function createSpriteSheet(name: string, images: ExtSprite[], log: boolea
 
 	const taken: Taken[] = times(maxLayers, () => ({
 		lines: times(outputWidth, () => [{ start: 0, length: outputWidth }]),
-		data: new Uint8Array(outputWidth * outputWidth),
 	}));
 
 	sprites

@@ -2,6 +2,7 @@ import { argv } from 'yargs';
 import { ServerConfig } from '../common/adminInterfaces';
 
 export interface AppConfig {
+	mockLogin?: boolean;
 	title: string;
 	twitterLink?: string;
 	discordLink?: string;
@@ -59,6 +60,13 @@ export interface AppArgs {
 export const args = argv as AppArgs;
 export const { version, description }: AppPackage = require('../../../package.json');
 export const config: AppConfig = require('../../../config.json');
+
+require('dotenv').config();
+
+// Override mockLogin if MOCK_LOGIN=true in .env
+if (process.env.MOCK_LOGIN === 'true') {
+	(config as any).mockLogin = true;
+}
 
 // append / to host if the server op forgot it
 if (!config.host.endsWith('/')) {

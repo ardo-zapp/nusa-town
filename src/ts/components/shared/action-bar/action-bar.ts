@@ -68,7 +68,7 @@ export class ActionBar {
 		const settings = { ...this.settings.account, actions: serializeActions(this.actions) };
 		this.settings.saveAccountSettings(settings);
 	}
-	scroll(e: MouseWheelEvent) {
+	scroll(e: WheelEvent) {
 		if (e.deltaY) {
 			const delta = e.deltaY > 0 ? 1 : -1;
 			this.scroller.nativeElement.scrollLeft += delta * 20;

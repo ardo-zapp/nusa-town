@@ -130,7 +130,7 @@ if (production) {
 }
 
 if (args.login || args.admin) {
-	app.use(serveFavicon(pathTo('favicons', 'favicon.ico')));
+	app.use(serveFavicon(pathTo('favicons', 'favicon.ico')) as any);
 }
 
 app.use(morgan('dev', { skip: (_, res) => res.statusCode < 500 || res.statusCode === 503 }));
@@ -356,7 +356,7 @@ if (args.login) {
 
 	app.use('/assets-admin', ...adminMiddlewares(), express.static(adminAssetsPath, { maxAge, etag }));
 	app.use('/auth', ...sessionMiddlewares(), authRoutes(
-		config.host, server, settings, liveSettings, args.local || DEVELOPMENT, removedDocument));
+		config.host, server, settings, liveSettings, args.local || !!config.mockLogin || DEVELOPMENT, removedDocument));
 	app.use('/api', ...sessionMiddlewares(), api(
 		server, settings, { version, host: config.host, debug: DEVELOPMENT, local: !!args.local }, removedDocument));
 	app.use('/api1', ...sessionMiddlewares(), api1(server, settings));
@@ -428,9 +428,18 @@ reloadSettings().then(() => {
 		pollCertificateExpirationDate();
 	}
 
+	if (config.mockLogin) {
+		const { seedMockAccounts } = require('./mockLoginSeeder');
+		seedMockAccounts().catch((err: any) => console.error("Failed to seed mock accounts", err));
+	}
+
+	
+		
 	httpServer.listen(port, () => {
+		
 		if (uwsAdapter) {
-			uwsAdapter.listen(wsPort, () => {
+			
+					uwsAdapter.listen(wsPort, () => {
 				const options = compact([
 					app.get('env'),
 					args.login && 'login',

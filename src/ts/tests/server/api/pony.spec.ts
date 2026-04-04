@@ -11,7 +11,7 @@ import { getCharacterLimit } from '../../../common/accountUtils';
 import { genId, genObjectId, account } from '../../mocks';
 import { Reporter } from '../../../server/serverInterfaces';
 
-const info = 'DAKVlZUvLy82QIxomgCfgAYAGIAoQGEBwAEERFEUEA==';
+const info = 'FAKVlZUvLy82QIxojQAn4ADAAYQBQQGCA4ACCIiiKCA=';
 
 describe('api pony', () => {
 	describe('savePony()', () => {
@@ -74,7 +74,7 @@ describe('api pony', () => {
 
 				await expect(savePony(account, { id: characterId, name: 'foo', info }, reporter)).eventually.eql({
 					id: characterId,
-					info: 'DAKVlZUvLy82QIxomgCfgAYAGIAoQGEBwAEERFEUEA==',
+					info: 'FAKVlZUvLy82QIxojQAn4ADAAYQBQQGCA4ACCIiiKCA=',
 					lastUsed: '1970-01-01T00:00:00.123Z',
 					name: 'foo',
 					desc: '',
@@ -100,7 +100,7 @@ describe('api pony', () => {
 
 				expect(character.name).equal('foo');
 				expect(character.tag).equal('tag');
-				expect(character.info).equal('DAKVlZUvLy82QIxomgCfgAYAGIAoQGEBwAEERFEUEA==');
+				expect(character.info).equal('FAKVlZUvLy82QIxojQAn4ADAAYQBQQGCA4ACCIiiKCA=');
 				expect(character.lastUsed!.toISOString()).equal((new Date()).toISOString());
 			});
 
@@ -178,7 +178,7 @@ describe('api pony', () => {
 			});
 
 			it('sets hide support pony flag', async () => {
-				await savePony(account, { id: characterId, name: 'foo', info: 'DAKVlZUvLy82QIxomgCfgAYAGIAoQGEBwAEERFEUEA==', hideSupport: true }, reporter);
+				await savePony(account, { id: characterId, name: 'foo', info: 'FAKVlZUvLy82QIxojQAn4ADAAYQBQQGCA4ACCIiiKCA=', hideSupport: true }, reporter);
 
 				expect(character.flags).equal(CharacterFlags.HideSupport);
 			});
@@ -224,7 +224,7 @@ describe('api pony', () => {
 
 				await expect(savePony(acc, { name: 'foo', info }, reporter)).eventually.eql({
 					id: characterId,
-					info: 'DAKVlZUvLy82QIxomgCfgAYAGIAoQGEBwAEERFEUEA==',
+					info: 'FAKVlZUvLy82QIxojQAn4ADAAYQBQQGCA4ACCIiiKCA=',
 					lastUsed: '1970-01-01T00:00:00.123Z',
 					name: 'foo',
 					desc: '',
@@ -250,7 +250,7 @@ describe('api pony', () => {
 
 				expect(character.name).equal('foo');
 				expect(character.tag).equal('tag');
-				expect(character.info).equal('DAKVlZUvLy82QIxomgCfgAYAGIAoQGEBwAEERFEUEA==');
+				expect(character.info).equal('FAKVlZUvLy82QIxojQAn4ADAAYQBQQGCA4ACCIiiKCA=');
 				expect(character.lastUsed!.toISOString()).equal((new Date()).toISOString());
 			});
 

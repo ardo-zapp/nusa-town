@@ -247,6 +247,7 @@ export function authRoutes(
 			includeEmail: true,
 			profileFields: ['id', 'displayName', 'name', 'emails'],
 			passReqToCallback: true,
+			...(id === 'steam' ? { returnURL: callbackURL, realm: host } : {})
 		};
 
 		async function signInOrSignUp(req: Request, profile: Profile) {
@@ -290,8 +291,33 @@ export function authRoutes(
 	}));
 
 	if (mockLogin) {
+		app.get('/local', async (req, res, next) => {
+			if (req.query.username) {
+				try {
+					console.log(`[Mock Login] Trying to login as ${req.query.username}`);
+					const account = await Account.findById(req.query.username).exec();
+					if (account) {
+						console.log(`[Mock Login] Account found! Logging in...`);
+						req.login(account, (err) => {
+							if (err) {
+								console.error(`[Mock Login] Error during req.login:`, err);
+								return next(err);
+							}
+							console.log(`[Mock Login] req.login success! Redirecting to /`);
+							return res.redirect('/');
+						});
+						return;
+					} else {
+						console.log(`[Mock Login] Account NOT found for username: ${req.query.username}`);
+					}
+				} catch (e) {
+					console.error("Local route error:", e);
+				}
+			}
+			next();
+		}, authenticate('local', { successRedirect: '/', failureRedirect: '/failed-login' }));
+
 		use(new LocalStrategy((login, _pass, done) => Account.findById(login, done)));
-		app.get('/local', authenticate('local', { successRedirect: '/', failureRedirect: '/failed-login' }));
 	}
 
 	return app;

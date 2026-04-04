@@ -155,7 +155,7 @@ describe('worldMap', () => {
 		it('adds says object to entity', () => {
 			handleSays(game, 1, 'test', MessageType.Chat);
 
-			expect(e.says).eql({ message: 'test', timer: 5.1875, total: 5.1875, type: MessageType.Chat, created: 0 });
+			expect(e.says).eql({ message: 'test', timer: 5.046875, total: 5.046875, type: MessageType.Chat, created: 0 });
 		});
 
 		// it('does nothing if entity is not on the map', () => {

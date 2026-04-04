@@ -1,6 +1,6 @@
 import { random } from 'lodash';
 import { ServerEntity, ServerRegion, EntityUpdateBase, ServerMap } from './serverInterfaces';
-import { TileType, EntityFlags, UpdateFlags, canWalk } from '../common/interfaces';
+import { TileType, EntityFlags, UpdateFlags, canWalk, EntityState } from '../common/interfaces';
 import { compressTiles } from '../common/compress';
 import { rect, withBorder, withPadding } from '../common/rect';
 import {
@@ -102,6 +102,10 @@ export function getSizeOfRegion(region: ServerRegion) {
 export function addEntityToRegion(region: ServerRegion, entity: ServerEntity, map: ServerMap) {
 	region.entities.push(entity);
 
+	if (hasFlag(entity.state, EntityState.Editable)) {
+		map.totalEditableEntities++;
+	}
+
 	if (canCollideWith(entity)) {
 		region.colliders.push(entity);
 		invalidateRegionsCollider(region, map);
@@ -114,6 +118,10 @@ export function addEntityToRegion(region: ServerRegion, entity: ServerEntity, ma
 
 export function removeEntityFromRegion(region: ServerRegion, entity: ServerEntity, map: ServerMap) {
 	const removed = removeItem(region.entities, entity);
+
+	if (removed && hasFlag(entity.state, EntityState.Editable)) {
+		map.totalEditableEntities--;
+	}
 
 	if (canCollideWith(entity)) {
 		removeItem(region.colliders, entity);

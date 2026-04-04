@@ -32,12 +32,12 @@
 				fa-icon([icon]="icon(p.id)" [fixedWidth]="true" size="lg")
 				.sr-only Sign in using {{p.name}}
 
-	div(*ngIf="local")
+	div(*ngIf="true")
 		.btn-group.dropdown(dropdown)
 			button.btn.btn-lg.btn-dark.dropdown-toggle(dropdownToggle)
 				| Mock login
 			.dropdown-menu(*dropdownMenu)
-				//- NOTE: change usernames to ids of accounts you want to use for testing
-				a.dropdown-item(href="/auth/local?password=x&username=57a3dc6f2f0019a161cdebf6" target="_self") Admin
-				a.dropdown-item(href="/auth/local?password=x&username=57ae2332a67f4dc52e123e14" target="_self") Test
-				a.dropdown-item(href="/auth/local?password=x&username=57ae2332a67f4dc52e123e15" target="_self") Other
+				a.dropdown-item(href="/auth/local?password=x&username=111111111111111111111111" target="_self") Superadmin
+				a.dropdown-item(href="/auth/local?password=x&username=222222222222222222222222" target="_self") Admin
+				a.dropdown-item(href="/auth/local?password=x&username=333333333333333333333333" target="_self") Moderator
+				a.dropdown-item(href="/auth/local?password=x&username=444444444444444444444444" target="_self") User

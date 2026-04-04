@@ -1,5 +1,5 @@
 import { Component, Output, EventEmitter } from '@angular/core';
-import { signUpProviders, signInProviders, local } from '../../../client/data';
+import { signUpProviders, signInProviders } from '../../../client/data';
 import { emptyIcon, oauthIcons } from '../../../client/icons';
 import { OAuthProvider } from '../../../common/interfaces';
 
@@ -15,7 +15,7 @@ export function getProviderIcon(id: string) {
 export class SignInBox {
 	readonly signUpProviders = signUpProviders;
 	readonly signInProviders = signInProviders;
-	readonly local = local || DEVELOPMENT;
+	readonly local = true;
 	@Output() signIn = new EventEmitter<OAuthProvider>();
 	icon(id: string) {
 		return getProviderIcon(id);

@@ -620,7 +620,7 @@ describe('playerUtils', () => {
 		});
 
 		it('does nothing if cannot perform action', () => {
-			client.lastBoopOrKissAction = 1000;
+			client.lastBoopOrKissAction = Date.now() + 1000;
 
 			boop(client, 0);
 
@@ -661,7 +661,7 @@ describe('playerUtils', () => {
 		let clock: SinonFakeTimers;
 		beforeEach(() => {
 			clock = useFakeTimers();
-			clock.setSystemTime(0);
+			clock.setSystemTime(10);
 			client.pony.exprCancellable = true;
 			client.pony.options!.expr = 123;
 		});
@@ -740,7 +740,7 @@ describe('playerUtils', () => {
 		let clock: SinonFakeTimers;
 		beforeEach(() => {
 			clock = useFakeTimers();
-			clock.setSystemTime(0);
+			clock.setSystemTime(10);
 		});
 		afterEach(() => {
 			clock.restore();
@@ -792,7 +792,7 @@ describe('playerUtils', () => {
 		let clock: SinonFakeTimers;
 		beforeEach(() => {
 			clock = useFakeTimers();
-			clock.setSystemTime(0);
+			clock.setSystemTime(10);
 		});
 		afterEach(() => {
 			clock.restore();
@@ -844,7 +844,7 @@ describe('playerUtils', () => {
 		let clock: SinonFakeTimers;
 		beforeEach(() => {
 			clock = useFakeTimers();
-			clock.setSystemTime(0);
+			clock.setSystemTime(10);
 			client.pony.canFly = true;
 			client.pony.exprCancellable = true;
 			client.pony.options!.expr = 123;
@@ -910,7 +910,7 @@ describe('playerUtils', () => {
 		let clock: SinonFakeTimers;
 		beforeEach(() => {
 			clock = useFakeTimers();
-			clock.setSystemTime(0);
+			clock.setSystemTime(10);
 			client.pony.region = createServerRegion(1, 1);
 			client.pony.exprCancellable = true;
 			client.pony.options!.expr = 123;

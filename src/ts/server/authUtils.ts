@@ -8,7 +8,7 @@ import { UserError } from './userError';
 import { CreateAccountOptions, connectOnlySocialError } from './accountUtils';
 
 export async function assignAuth(auth: IAuth, account: IAccount) {
-	if (!auth.account || !auth.account.equals(account._id)) {
+	if (!auth.account || !(auth.account as any).equals(account._id)) {
 		system(account._id, `connected auth ${auth.name} [${auth._id}]`);
 		await updateAuth(auth._id, { account: account._id });
 		return true;

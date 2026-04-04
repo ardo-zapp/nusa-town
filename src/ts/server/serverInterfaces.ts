@@ -128,6 +128,7 @@ export interface ServerMap extends IMap<ServerRegion> {
 	dontUpdateTilesAndColliders: boolean;
 	tilesLocked: boolean;
 	editableEntityLimit: number;
+	totalEditableEntities: number;
 	editableArea?: Rect;
 	editingLocked: boolean;
 }

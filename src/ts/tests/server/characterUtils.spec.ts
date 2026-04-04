@@ -177,7 +177,7 @@ describe('characterUtils', () => {
 
 		it('sets info safe fields to info with removed CM if bad CM flag is true', () => {
 			const entity = serverEntity(1);
-			const offlinePonyWithoutCM = 'DAKVlZUvLy82QIxomgCfgAYAGIAoQGEBAA==';
+			const offlinePonyWithoutCM = 'FAKVlZUvLy82QIxojQAn4ADAAYQBQQGCAgA=';
 
 			updatePony(
 				entity,

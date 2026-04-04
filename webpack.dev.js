@@ -15,6 +15,7 @@ module.exports = merge(common, {
 		'bootstrap-admin': './ts/bootstrap-admin',
 		'bootstrap-tools': './ts/bootstrap-tools',
 	},
+	// DEV: Requires Webpack 4 specific devtool naming
 	devtool: 'cheap-eval-source-map',
 	devServer: {
 		host: '0.0.0.0',
@@ -23,6 +24,7 @@ module.exports = merge(common, {
 		historyApiFallback: true,
 		publicPath: '/assets/scripts/',
 		stats: 'minimal',
+		// DEV: Required to bypass host checking in WDS v3
 		disableHostCheck: true
 	},
 	stats: 'minimal',
@@ -62,8 +64,16 @@ module.exports = merge(common, {
 		},
 	},
 	plugins: [
+		// DEV: Explicit instantiation required for Webpack 4 HMR
 		new webpack.HotModuleReplacementPlugin(),
 		new webpack.NamedModulesPlugin(),
-		new webpack.DefinePlugin({ DEVELOPMENT: true, TOOLS: true, SERVER: false, BETA: true, TIMING: true, TESTS: false }),
+		new webpack.DefinePlugin({
+			DEVELOPMENT: true,
+			TOOLS: true,
+			SERVER: false,
+			BETA: true,
+			TIMING: true,
+			TESTS: false
+		}),
 	],
 });

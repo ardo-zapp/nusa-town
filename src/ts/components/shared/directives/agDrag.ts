@@ -18,7 +18,7 @@ export interface AgDragOptions {
 
 export function handleDrag(element: HTMLElement, emit: (event: AgDragEvent) => void, options: AgDragOptions = {}) {
 	// typeof PointerEvent !== 'undefined'
-	const eventSets = window.navigator.pointerEnabled ? [
+	const eventSets = !!(window.navigator as any).pointerEnabled ? [
 		{ down: 'pointerdown', move: 'pointermove', up: 'pointerup' }, // , up2: 'pointercancel' },
 	] : [
 			{ down: 'mousedown', move: 'mousemove', up: 'mouseup' },

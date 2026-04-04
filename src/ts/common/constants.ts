@@ -193,3 +193,5 @@ export const GENERAL_RULES = [
 	`Don't encourage behaviour violating the rules`,
 	`Violation of the rules may result in temporary or permanent ban`,
 ];
+
+export const SHOW_PONY_TOWN_CHAR = false;

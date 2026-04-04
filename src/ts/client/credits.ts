@@ -1,7 +1,7 @@
 export interface Credit {
 		name: string;
 		title: string;
-		avatarIndex: number;
+		avatarImage: string;
 		links: string[];
 }
 
@@ -18,51 +18,57 @@ export interface Contributors {
 // The Team
 export const CREDITS: Credit[] = [
 		{
-		name: 'Jacktor',
+		name: 'Ardo Zapp',
 		title: 'Owner / Programmer',
-		avatarIndex: 0, // place of the avatar in /assets/images/avatars.jpg
-		links: ['https://facebook.com/deniliandi29', 'https://twitter.com/deniliandi29'],
+		avatarImage: 'ardo-zapp.webp',
+		links: ['https://www.facebook.com/ardo.zapp', 'https://x.com/ardo_zapp'],
+		},
+		{
+		name: 'Rinonmac',
+		title: 'Programmer',
+		avatarImage: 'rinonmac.webp',
+		links: ['https://github.com/rinonmac'],
 		},
 		{
 		name: 'LandBurner',
 		title: 'Artist / Admin',
-		avatarIndex: 1,
-		links: ['https://facebook.com/landburner6x'],
+		avatarImage: 'landburner.webp',
+		links: ['https://www.facebook.com/ikkrifik'],
 		},
 		{
 		name: 'OhZuya',
 		title: 'Artist / Admin',
-		avatarIndex: 4,
-		links: ['https://facebook.com/OhZuya.Gaming'],
+		avatarImage: 'ohzuya.webp',
+		links: ['https://www.facebook.com/ohzuya.gaming.5'],
 		},
 		{
-		name: 'Richelle',
+		name: 'K1mna',
 		title: 'Artist',
-		avatarIndex: 2,
-		links: ['https://twitter.com/Deer_butts'],
+		avatarImage: 'k1mna.webp',
+		links: ['https://www.instagram.com/k1mmyal1na/'],
 		},
 		{
 		name: 'Diane',
 		title: 'Artist',
-		avatarIndex: 3,
+		avatarImage: 'diane.webp',
 		links: ['https://facebook.com/dex.vortex'],
 		},
 		{
-		name: 'Lunatia Elsa',
+		name: 'Shozo_Fox',
 		title: 'Artist',
-		avatarIndex: 6,
-		links: ['https://facebook.com/nanazdina.art'],
+		avatarImage: 'shozo-fox.webp',
+		links: ['https://www.tiktok.com/@shozo_fox', 'https://www.instagram.com/shozofox'],
 		},
 		{
-		name: 'Irina',
+		name: 'Papercliff',
 		title: 'Moderator',
-		avatarIndex: 5,
-		links: ['https://facebook.com/gaffarnov.555'],
+		avatarImage: 'papercliff.webp',
+		links: ['https://x.com/Papercliff_PT'],
 		},
 		{
 		name: 'Zalfa Oriana',
 		title: 'Moderator',
-		avatarIndex: 7,
+		avatarImage: 'zalfa-oriana.webp',
 		links: ['https://facebook.com/zalfa.oriana.1', 'https://youtube.com/c/ZalfaOriana'],
 		}
 		];

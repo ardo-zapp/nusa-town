@@ -318,18 +318,7 @@ export class ServerActions implements IServerActions, SocketServer {
 					return saySystem(this.client, `House is locked`);
 				}
 
-				let totalEditableEntities = 0;
-
-				// TODO: optimize
-				for (const region of this.map.regions) {
-					for (const entity of region.entities) {
-						if (hasFlag(entity.state, EntityState.Editable)) {
-							totalEditableEntities++;
-						}
-					}
-				}
-
-				if (totalEditableEntities >= this.map.editableEntityLimit) {
+				if (this.map.totalEditableEntities >= this.map.editableEntityLimit) {
 					return saySystem(this.client, `Object limit reached`);
 				}
 

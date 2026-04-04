@@ -9,6 +9,13 @@ node_modules/
 /.vs
 
 /src/ts/generated/*
+!/src/ts/generated/sprites.ts
 !/src/ts/generated/gamepad-template.ts
+!/src/ts/generated/gamepad-mappings.ts
+
+/assets/images/pony.png
+/assets/images/pony2.png
+/assets/images/pony2a.png
 
 /config.json
+.env

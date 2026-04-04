@@ -3,6 +3,7 @@
 require('source-map-support').install();
 
 (global as any).BETA = false;
+(global as any).DEVELOPMENT = false;
 
 import * as fs from 'fs';
 import * as path from 'path';

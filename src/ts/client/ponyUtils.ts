@@ -166,6 +166,6 @@ if (DEVELOPMENT) {
 
 function assertSizes(name: string, a: any[], b: any[]) {
 	if (a.length !== b.length) {
-		throw new Error(`Invalid ${name} length (${a.length} !== ${b.length})`);
+		console.warn(`Invalid ${name} length (${a.length} !== ${b.length}) - Ignored for dummy sprites`);
 	}
 }

@@ -143,8 +143,8 @@ import {
 	faAmilia,
 	faYandexInternational,
 	faDiscord,
-	faTiktok
-} from '../generated/fa-icons';
+	faTiktok,
+	} from '../generated/fa-icons';
 
 export {
 	faPatreon,
@@ -153,7 +153,8 @@ export {
 	faTumblr,
 	faGithub,
 	faDiscord,
-	faTiktok
+	faTiktok,
+	
 } from '../generated/fa-icons';
 
 export const partyLeaderIcon = faCrown;
@@ -174,7 +175,8 @@ export const oauthIcons: { [key: string]: any; } = {
 	vkontakte: faVk,
 	google: faGoogle,
 	discord: faDiscord,
-	tiktok: faTiktok
+	tiktok: faTiktok,
+	
 };
 
 export const uaIcons: { [key: string]: any; } = {
