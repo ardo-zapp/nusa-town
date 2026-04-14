@@ -66,7 +66,7 @@ export function isValid2(c: number): boolean {
 		|| (c >= 0x10a0 && c <= 0x10c5) || (c === 0x10c7) || (c === 0x10cd) || (c >= 0x10d0 && c <= 0x10ff) // Georgian
 		|| (c >= 0x1100 && c <= 0x11ff) || (c >= 0x3130 && c <= 0x318f) || (c >= 0xac00 && c <= 0xd7af) // Hangul
 		|| (c >= 0x1400 && c <= 0x167f) // Unified Canadian Aboriginal Syllabics
-		|| (c >= 0x2010 && c <= 0x2027) || (c >= 0x2030 && c <= 0x205e)  // General Punctuation
+		|| (c >= 0x2010 && c <= 0x2027) || (c >= 0x2030 && c <= 0x205e) || c === 0x200b || c === 0x200c // General Punctuation & Typing Indicator
 		|| (c >= 0x20a0 && c <= 0x20bf) // Currency Symbols
 		|| (c >= 0x2100 && c <= 0x214f) // Letterlike Symbols
 		|| (c >= 0x2150 && c <= 0x218b) // Number Forms

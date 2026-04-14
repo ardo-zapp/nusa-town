@@ -47,6 +47,14 @@ export const enum MapFlags {
 	EdibleGrass = 8,
 }
 
+export const typingIndicatorMessage = '\u200B';
+export const typingIndicatorStopMessage = '\u200C';
+export const typingIndicatorDuration = 5000;
+
+export function isTypingIndicatorMessage(message: string | undefined): boolean {
+	return message === typingIndicatorMessage;
+}
+
 export const enum NotificationFlags {
 	None = 0,
 	Ok = 1,
@@ -670,6 +678,7 @@ export interface AccountSettings {
 	ignoreNonFriendWhispers?: boolean;
 	chatlogOpacity?: number;
 	seeThroughObjects?: boolean;
+	showTypingIndicator?: boolean;
 	chatlogRange?: number;
 	actions?: string;
 	hidden?: boolean;
@@ -1171,6 +1180,7 @@ export const enum SelectFlags {
 
 export interface IServerActions {
 	say(entityId: number, text: string, type: ChatType): void;
+	typing(entityId: number, type: MessageType, active: boolean): void;
 	select(entityId: number, flags: SelectFlags): void;
 	interact(entityId: number): void;
 	use(): void;

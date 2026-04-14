@@ -16,10 +16,29 @@ Nusa Town is currently in a "Cleansing Phase."
 ## 1. Project Contributors & Ownership
 The following assets are original works created by the Nusa Town team and are the exclusive property of their respective creators or the project.
 
-### Artist: [LandBurner](https://www.facebook.com/ikkrifik)
+### Artist: [Land Burner](https://www.facebook.com/ikkrifik)
 **Location:** `assets-source/objects/raflesia_arnoldi/`
 - `1.psd`
 - `2.psd`
+
+**Location:** `assets-source/objects/indo_flags/`
+- `1.psd`
+- `2.psd`
+
+### Artist: [Diane](https://www.facebook.com/dex.vortex)
+**Location:** `assets-source/objects/carts/`
+- `bakso.psd`
+- `sate_lit.psd`
+- `sate_unlit.psd`
+
+### Artist: [Zalfa Oriana](https://www.facebook.com/zalfa.oriana)
+**Location:** `assets/images/`
+- `logo-120.png`
+- `logo-200.png`
+- `logo-64.png`
+- `logo-large.png`
+- `logo-small.png`
+- `logo.png`
 
 ---
 

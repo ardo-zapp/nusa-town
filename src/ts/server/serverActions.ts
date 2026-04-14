@@ -2,7 +2,8 @@ import { Socket, Method, SocketServer, Bin, getMethods } from 'ag-sockets';
 import {
 	PlayerAction, ModAction, ChatType, PonyData, IServerActions, TileType, Action, EditorAction, Entity,
 	EntityOrPonyOptions, LeaveReason, SupporterInvite, InfoFlags, AccountSettings, FriendStatusFlags,
-	SelectFlags, UpdateFlags, isValidModTile, isValidTile, MapFlags, EntityState, houseTiles
+	SelectFlags, UpdateFlags, isValidModTile, isValidTile, MapFlags, EntityState, houseTiles,
+	typingIndicatorMessage, MessageType
 } from '../common/interfaces';
 import { CharacterState, ServerConfig } from '../common/adminInterfaces';
 import { PARTY_LIMIT, OFFLINE_PONY, TILE_CHANGE_RANGE, MIN_HIDE_TIME, MAX_HIDE_TIME, PONY_TYPE } from '../common/constants';
@@ -59,6 +60,25 @@ const playerActionNames = [
 
 const editorAdded = new Map<string, AddedEntity[]>();
 const debugRate = DEVELOPMENT ? '1000/s' : '';
+
+function typingMessageTypeToChatType(type: MessageType) {
+	switch (type) {
+		case MessageType.Chat: return ChatType.Say;
+		case MessageType.Party: return ChatType.Party;
+		case MessageType.Thinking: return ChatType.Think;
+		case MessageType.PartyThinking: return ChatType.PartyThink;
+		case MessageType.Supporter1: return ChatType.Supporter1;
+		case MessageType.Supporter2: return ChatType.Supporter2;
+		case MessageType.Supporter3: return ChatType.Supporter3;
+		case MessageType.Whisper:
+		case MessageType.WhisperTo:
+		case MessageType.WhisperAnnouncement:
+		case MessageType.WhisperToAnnouncement:
+			return ChatType.Whisper;
+		default:
+			return undefined;
+	}
+}
 
 @Socket({
 	id: 'game',
@@ -145,6 +165,26 @@ export class ServerActions implements IServerActions, SocketServer {
 
 		const target = entityId ? this.world.getEntityById(entityId) : undefined;
 		this.chatSay(this.client, text, chatType, target && target.client, this.getSettings());
+	}
+	@Method({ rateLimit: '6/s', binary: [Bin.U32, Bin.U8, Bin.Bool] })
+	typing(entityId: number, type: MessageType, active: boolean) {
+		validateNumber(entityId, 'entityId');
+		validateNumber(type, 'type');
+		this.updateLastAction();
+
+		if (this.client.isSwitchingMap)
+			return;
+
+		const target = entityId ? this.world.getEntityById(entityId) : undefined;
+		const chatType = typingMessageTypeToChatType(type);
+
+		if (chatType !== undefined) {
+			this.chatSay(this.client, active ? typingIndicatorMessage : '.', chatType, target && target.client, this.getSettings());
+		} else {
+			// fallback / legacy support
+			const msg = active ? typingIndicatorMessage : '.';
+			this.chatSay(this.client, msg, ChatType.Say, target && target.client, this.getSettings());
+		}
 	}
 	@Method({ rateLimit: '3/s', binary: [Bin.U32, Bin.U8] })
 	select(entityId: number, flags: SelectFlags) {

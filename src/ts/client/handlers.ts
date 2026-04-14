@@ -11,6 +11,7 @@ import { isChatVisible } from '../common/camera';
 import { createRegion, worldToRegionX, worldToRegionY } from '../common/region';
 import { createAnEntity, poof, poof2 } from '../common/entities';
 import { getPonyState, setPonyState, isPonyFlying, addChatBubble, isHidden } from '../common/entityUtils';
+import { isTypingIndicatorMessage, typingIndicatorDuration, typingIndicatorStopMessage } from '../common/interfaces';
 import {
 	isPony, createPony, setPonyExpression, updatePonyInfo, updatePonyHold, doPonyAction, hasHeadAnimation,
 	setHeadAnimation,
@@ -588,6 +589,9 @@ function isFriendEntityId(game: PonyTownGame, id: number) {
 }
 
 function shouldShowChatMessage(game: PonyTownGame, entity: Entity | FakeEntity, message: string, type: MessageType): boolean {
+	if (isTypingIndicatorMessage(message))
+		return true;
+
 	if (entity === game.player)
 		return true;
 
@@ -642,24 +646,30 @@ export function handleSay(game: PonyTownGame, entity: Entity | FakeEntity, messa
 	if (!shouldShowChatMessage(game, entity, message, type))
 		return;
 
-	if (type === MessageType.Dismiss || message === '.') {
+	if (type === MessageType.Dismiss || message === typingIndicatorStopMessage) {
 		if (!(entity as any).fake && (entity as any).says) {
 			dismissSays((entity as any).says);
 		}
 	} else {
+		const typingIndicator = isTypingIndicatorMessage(message);
+
+		if (typingIndicator && game.settings.account.showTypingIndicator === false) {
+			return;
+		}
+
 		const bubbleEntity = isWhisperTo(type) ? game.player : entity;
 
 		if (bubbleEntity && !bubbleEntity.fake && game.map.entitiesById.has(bubbleEntity.id)) {
-			const total = getSaysTime(message);
+			const total = typingIndicator ? typingIndicatorDuration : getSaysTime(message);
 			addChatBubble(game.map, bubbleEntity as any, { message, type, total, timer: total, created: Date.now() });
 		}
 
-		if (isWhisper(type)) {
+		if (!typingIndicator && isWhisper(type)) {
 			const friend = game.model.friends && game.model.friends.find(f => f.entityId === entity.id);
 			game.lastWhisperFrom = { entityId: entity.id, accountId: friend && friend.accountId };
 		}
 
-		if (shouldShowChatMessageInChatlog(game, entity, type)) {
+		if (!typingIndicator && shouldShowChatMessageInChatlog(game, entity, type)) {
 			const { id, name = '', crc } = entity;
 			game.messageQueue.push({ id, crc, name, message, type });
 		}

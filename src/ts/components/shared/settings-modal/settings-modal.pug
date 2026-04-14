@@ -61,6 +61,8 @@
 			div(*tabContent)
 				.form-group
 					custom-checkbox(
+						[(checked)]="account.showTypingIndicator") Show typing indicator
+					custom-checkbox(
 						[(checked)]="account.ignorePublicChat"
 						help="Don't show any public chat messages, only party chat and whispes will be visible")
 						| Hide all public chat messages

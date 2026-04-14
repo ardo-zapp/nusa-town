@@ -25,9 +25,13 @@ export default function (server: ServerConfig, settings: Settings, world: World 
 	});
 
 	app.get('/animation/:id', offline, (req, res) => {
-		const filePath = path.join(paths.store, req.params['id']);
+		const id = req.params['id'];
 
-		res.sendFile(filePath);
+		if (typeof id !== 'string' || !/^[a-z0-9_.]+$/.test(id) || id.includes('..')) {
+			res.sendStatus(400);
+		} else {
+			res.sendFile(path.join(paths.store, id));
+		}
 	});
 
 	app.post('/animation', offline, (req, res) => {
@@ -39,15 +43,20 @@ export default function (server: ServerConfig, settings: Settings, world: World 
 	});
 
 	app.post('/animation-gif', offline, (req, res) => {
-		const image: string = req.body.image;
-		const width: number = req.body.width || 80;
-		const height: number = req.body.height || 80;
-		const fps: number = req.body.fps || 24;
-		const remove: number = req.body.remove || 0;
+		const image = req.body.image;
+		const width = parseInt(req.body.width, 10) | 0 || 80;
+		const height = parseInt(req.body.height, 10) | 0 || 80;
+		const fps = parseInt(req.body.fps, 10) | 0 || 24;
+		const remove = parseInt(req.body.remove, 10) | 0 || 0;
+		const header = 'data:image/gif;base64,';
+
+		if (typeof image !== 'string' || !image.startsWith(header) || width <= 0 || height <= 0 || fps <= 0 || remove < 0) {
+			res.sendStatus(400);
+			return;
+		}
 
 		const name = randomString(10);
 		const filePath = path.join(paths.store, name + '.png');
-		const header = 'data:image/gif;base64,';
 		const buffer = Buffer.from(image.substr(header.length), 'base64');
 		const magick = /^win/.test(process.platform) ? 'magick' : 'convert';
 		const command = `${magick} -dispose Background -delay ${100 / fps} -loop 0 "${filePath}" -crop ${width}x${height} `

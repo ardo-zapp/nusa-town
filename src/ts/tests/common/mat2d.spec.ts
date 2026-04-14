@@ -1,6 +1,6 @@
 import '../lib';
 import { expect } from 'chai';
-import { createMat2D, identityMat2D, copyMat2D, setMat2D } from '../../common/mat2d';
+import { createMat2D, identityMat2D, copyMat2D, setMat2D, scaleMat2D } from '../../common/mat2d';
 
 describe('mat2d', () => {
 	describe('createMat2D()', () => {
@@ -47,6 +47,34 @@ describe('mat2d', () => {
 		it('returns the output matrix', () => {
 			const out = new Float32Array(6);
 			expect(setMat2D(out, 1, 2, 3, 4, 5, 6)).to.equal(out);
+		});
+	});
+
+	describe('scaleMat2D()', () => {
+		it('scales an identity matrix', () => {
+			const a = createMat2D();
+			const out = createMat2D();
+			scaleMat2D(out, a, 2, 3);
+			expect(out).eql(new Float32Array([2, 0, 0, 3, 0, 0]));
+		});
+
+		it('scales a non-identity matrix', () => {
+			const a = new Float32Array([1, 2, 3, 4, 5, 6]);
+			const out = createMat2D();
+			scaleMat2D(out, a, 2, 3);
+			expect(out).eql(new Float32Array([2, 4, 9, 12, 5, 6]));
+		});
+
+		it('scales in-place', () => {
+			const a = new Float32Array([1, 2, 3, 4, 5, 6]);
+			scaleMat2D(a, a, 2, 3);
+			expect(a).eql(new Float32Array([2, 4, 9, 12, 5, 6]));
+		});
+
+		it('returns the output matrix', () => {
+			const a = createMat2D();
+			const out = createMat2D();
+			expect(scaleMat2D(out, a, 2, 3)).to.equal(out);
 		});
 	});
 });

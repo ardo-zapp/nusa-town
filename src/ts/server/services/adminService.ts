@@ -16,12 +16,10 @@ import { ObservableList } from './observableList';
 import { HOUR } from '../../common/constants';
 import { getLoginServer } from '../internal';
 
-function addAuthToAccount(account: Account, auth: Auth, log: string) {
+function addAuthToAccount(account: Account, auth: Auth) {
 	const existingAuth = account.auths!.find(a => a._id === auth._id);
 
-	if (existingAuth) { // TODO: remove
-		console.log('duplicate auth', auth._id, 'to', account._id, log);
-	} else {
+	if (!existingAuth) {
 		account.authsList!.pushOrdered(auth, compareAuths);
 	}
 }
@@ -162,7 +160,7 @@ export class AdminService {
 				this.accountsForPotentialDuplicatesCheck.push(oldAccount);
 			},
 			onAddedOrUpdated: () => {
-				this.assignItems(this.unassignedAuths, (account, auth) => addAuthToAccount(account, auth, 'onAddedOrUpdated'));
+				this.assignItems(this.unassignedAuths, (account, auth) => addAuthToAccount(account, auth));
 				this.assignItems(this.unassignedPonies, addPonyToAccount);
 			},
 			onDelete: account => {
@@ -205,12 +203,12 @@ export class AdminService {
 				}
 			},
 			onAdd: auth => {
-				this.assignAccount(auth, this.unassignedAuths, account => addAuthToAccount(account, auth, 'onAdd'));
+				this.assignAccount(auth, this.unassignedAuths, account => addAuthToAccount(account, auth));
 			},
 			onUpdate: this.createUpdater<Auth>({
 				remove: (account, auth) => removeAuthFromAccount(account, auth) || removeItem(this.unassignedAuths, auth),
 				add: (account, auth) =>
-					account ? addAuthToAccount(account, auth, 'onUpdate') : pushUnique(this.unassignedAuths, auth),
+					account ? addAuthToAccount(account, auth) : pushUnique(this.unassignedAuths, auth),
 			}),
 			onDelete: auth => {
 				removeItem(this.unassignedAuths, auth);

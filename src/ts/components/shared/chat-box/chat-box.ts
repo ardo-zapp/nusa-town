@@ -1,6 +1,6 @@
 import { Component, ElementRef, NgZone, AfterViewInit, ViewChild, OnDestroy, Input } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { ChatType, isPartyChat, Entity, FakeEntity } from '../../../common/interfaces';
+import { ChatType, isPartyChat, Entity, FakeEntity, typingIndicatorMessage, typingIndicatorStopMessage, typingIndicatorDuration } from '../../../common/interfaces';
 import { SAY_MAX_LENGTH } from '../../../common/constants';
 import { Key } from '../../../client/input/input';
 import { PonyTownGame } from '../../../client/game';
@@ -67,6 +67,8 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 	private state: AutocompleteState = {};
 	private subscriptions: Subscription[];
 	private _disabled = false;
+	private typingIndicatorActive = false;
+	private typingHideTimeout: any = 0;
 	constructor(private game: PonyTownGame, zone: NgZone) {
 		this.subscriptions = [
 			this.game.onChat.subscribe(() => zone.run(() => this.chat(undefined))),
@@ -131,6 +133,7 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 			this.commandSuggestions = [];
 			this.selectedSuggestionIndex = -1;
 		}
+		this.updateTypingIndicator();
 	}
 	selectCommand(cmd: CommandSuggestion) {
 		this.message = cmd.name + ' ';
@@ -174,7 +177,9 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 			}
 		}
 
-		if (handled || spam || empty || ignoreAction || this.say(message, chatType, entityId)) {
+		const sent = !handled && !spam && !empty && !ignoreAction ? (this.stopTypingIndicator(chatType, entityId, true), this.say(message, chatType, entityId)) : false;
+
+		if (handled || spam || empty || ignoreAction || sent) {
 			if (message) {
 				this.lastMessages.push(message);
 
@@ -297,11 +302,60 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 			this.game.send(server => server.say(entityId, message, chatType)); return true;
 		}
 	}
+
+	updateTypingIndicator() {
+		if (!this.isOpen || this._disabled || !this.game.player || this.game.settings.account.showTypingIndicator === false) {
+			this.stopTypingIndicator();
+			return;
+		}
+
+		let chatType = this.chatType;
+		const whisperTo = this.game.whisperTo;
+		let entityId = whisperTo && whisperTo.id || 0;
+
+		if (/^\/(w|whisper) .+$/i.test(this.message)) {
+			chatType = ChatType.Whisper;
+			const messageSuffix = this.message.substr(/^\/w /i.test(this.message) ? 3 : 9);
+			const offset = messageSuffix.indexOf(' ');
+			if (offset !== -1) {
+				const name = messageSuffix.substr(0, offset);
+				const entity = findBestEntityByName(this.game, name);
+				if (entity) {
+					entityId = entity.id;
+				}
+			}
+		}
+
+		if (this.message && this.message.trim().length > 0 && !this.message.startsWith('/')) {
+			if (!this.typingIndicatorActive) {
+				this.typingIndicatorActive = true;
+				this.say(typingIndicatorMessage, chatType, entityId);
+			}
+
+			clearTimeout(this.typingHideTimeout);
+			this.typingHideTimeout = setTimeout(() => this.stopTypingIndicator(chatType, entityId), typingIndicatorDuration);
+		} else {
+			this.stopTypingIndicator(chatType, entityId);
+		}
+	}
+
+	private stopTypingIndicator(chatType: ChatType = ChatType.Say, entityId: number = 0, immediately = false) {
+		clearTimeout(this.typingHideTimeout);
+		if (this.typingIndicatorActive) {
+			this.typingIndicatorActive = false;
+			if (!immediately) {
+				this.say(typingIndicatorStopMessage, chatType, entityId);
+			}
+		}
+	}
+
 	private changeChatType(e: KeyboardEvent, chatType: ChatType) {
+		this.stopTypingIndicator();
 		this.chatType = chatType;
 		this.message = '';
 		this.updateChatType();
 		e.preventDefault();
+		this.updateTypingIndicator();
 	}
 	private chat(event: Event | undefined) {
 		if (this.isOpen) {
@@ -326,9 +380,11 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 		this.chatType = isValidChatType(this.chatType, this.game) ? this.chatType : ChatType.Say;
 		this.updateChatType();
 		this.input.focus();
+		this.updateTypingIndicator();
 	}
 	private close() {
 		if (this.isOpen) {
+			this.stopTypingIndicator();
 			this.emojiBoxState = 'none';
 			this.input.blur();
 			this.isOpen = false;
@@ -352,12 +408,15 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 		this.btnEmoji = emoji.names[0];
 	}
 	toggleChatType() {
+		this.stopTypingIndicator();
 		const chatTypes = getChatTypes(this.game);
 		this.chatType = chatTypes[(chatTypes.indexOf(this.chatType) + 1) % chatTypes.length];
 		this.updateChatType();
 		this.input.focus();
+		this.updateTypingIndicator();
 	}
 	setChatType(type: 'say' | 'party' | 'whisper') {
+		this.stopTypingIndicator();
 		if (type === 'say') {
 			this.chatType = ChatType.Say;
 			this.open();
@@ -368,6 +427,7 @@ export class ChatBox implements AfterViewInit, OnDestroy {
 			this.chatType = ChatType.Whisper;
 			this.open();
 		}
+		this.updateTypingIndicator();
 	}
 	private currentTypeClass = '';
 	private currentTypePrefix = '';

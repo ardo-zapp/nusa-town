@@ -1,10 +1,11 @@
 export const REV: { [key: string]: string; } = {
 		'images/avatar/ardo-zapp.webp': 'c4bdfd11b8',
 		'images/avatar/diane.webp': '8b5b419d39',
-		'images/avatar/k1mna.webp': 'b6db4007c9',
-		'images/avatar/landburner.webp': '7baecb1c0d',
+		'images/avatar/kimmy-alina.webp': 'b6db4007c9',
+		'images/avatar/land-burner.webp': 'f7362a0537',
 		'images/avatar/ohzuya.webp': '2ec53021ad',
 		'images/avatar/papercliff.webp': 'ad9601263d',
+		'images/avatar/rinonmac.webp': '5ed706bce6',
 		'images/avatar/shozo-fox.webp': '16b90fd0f1',
 		'images/avatar/zalfa-oriana.webp': 'e8a295782e',
 		'images/logo-120.png': '5ac4d828b9',

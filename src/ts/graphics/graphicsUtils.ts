@@ -1,7 +1,7 @@
 import {
 	Says, Rect, SpriteBatch, Sprite, SpriteBorder, MessageType, Entity, Point, Pony, SpriteBatchCommons,
 	PaletteSpriteBatch, Palette, isPartyMessage, PartyInfo, Camera, CommonPalettes, FontPalettes, PaletteManager,
-	isWhisperTo, isWhisper, isThinking, isPublicMessage
+	isWhisperTo, isWhisper, isThinking, isPublicMessage, isTypingIndicatorMessage
 } from '../common/interfaces';
 import { clamp, contains, intersect, toInt, hasFlag } from '../common/utils';
 import { BLACK, WHITE, OUTLINE_COLOR, getMessageColor, PARTY_COLOR, MESSAGE_COLOR, FRIENDS_COLOR } from '../common/colors';
@@ -74,14 +74,25 @@ function getMessagePalette(type: MessageType, palettes: FontPalettes) {
 	}
 }
 
+export function getTypingIndicatorFrame(created: number): string {
+	const dt = Date.now() - created;
+	const cycle = dt % 2000;
+	if (cycle < 400) return ' . ';
+	if (cycle < 800) return ' .. ';
+	if (cycle < 1200) return ' ... ';
+	if (cycle < 1600) return ' .. ';
+	return ' . ';
+}
+
 export function drawBaloon(
-	batch: PaletteSpriteBatch, { message, type = MessageType.Chat, timer = 1, total = 10 }: Says,
+	batch: PaletteSpriteBatch, { message, type = MessageType.Chat, timer = 1, total = 10, created = 0 }: Says,
 	x: number, y: number, bounds: Rect, palettes: CommonPalettes
 ) {
 	if (!fontPal)
 		return;
 
-	let { w, h } = measureText(message, fontPal);
+	const actualMessage = isTypingIndicatorMessage(message) ? getTypingIndicatorFrame(created) : message;
+	let { w, h } = measureText(actualMessage, fontPal);
 
 	w = Math.max(w, 4);
 
@@ -114,11 +125,11 @@ export function drawBaloon(
 		};
 
 		if (isThinking(type)) {
-			drawThinkingBaloon(batch, message, color, options, x, y, w, h, alpha, nippleX);
+			drawThinkingBaloon(batch, actualMessage, color, options, x, y, w, h, alpha, nippleX);
 		} else if (isWhisper(type) || isWhisperTo(type)) {
-			drawWhisperBaloon(batch, message, color, options, x, y, w, h, alpha, nippleX);
+			drawWhisperBaloon(batch, actualMessage, color, options, x, y, w, h, alpha, nippleX);
 		} else {
-			drawSpeechBaloon(batch, message, color, options, x, y, w, h, alpha, nippleX);
+			drawSpeechBaloon(batch, actualMessage, color, options, x, y, w, h, alpha, nippleX);
 		}
 	}
 }

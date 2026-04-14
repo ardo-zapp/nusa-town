@@ -23,8 +23,12 @@ export class TestController implements Controller {
 		const map = this.map;
 
 		if (DEVELOPMENT) {
-			Promise.all(times(10, i => `debug ${i + 1}`).map(name => Character.findOne({ name }).exec()))
-				.then(compact)
+			const names = times(10, i => `debug ${i + 1}`);
+			Character.find({ name: { $in: names } }).exec()
+				.then(items => {
+					const itemMap = new Map(items.map(i => [i.name, i]));
+					return compact(names.map(name => itemMap.get(name)));
+				})
 				.then(items => items.forEach((item, i) => {
 					const name = item.name;
 					const tag = i === 0 ? 'mod' : (i === 2 ? 'sup2' : '');

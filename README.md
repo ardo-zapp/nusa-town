@@ -53,7 +53,29 @@ Pony Town's code is released to public domain. The art and music assets are rele
 ### 2. Prerequisites
 
 * **Operating System**: Ubuntu 24.04.4 LTS (Highly Recommended) or Debian.
-* [Node.js](https://nodejs.org/en/download/) (version 24 LTS)
+* **Node.js 24 & Yarn**: We recommend using `nvm` (Node Version Manager) to install and manage your Node.js versions.
+
+  ```bash
+  # Download and install nvm:
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+
+  # Load nvm in lieu of restarting the shell:
+  \. "$HOME/.nvm/nvm.sh"
+
+  # Download and install Node.js (version 24):
+  nvm install 24
+
+  # Verify the Node.js version (Should print "v24.x.x"):
+  node -v
+
+  # Enable corepack to download and install Yarn:
+  corepack enable yarn
+  corepack prepare yarn@stable --activate
+
+  # Verify Yarn version:
+  yarn -v
+  ```
+
 * MongoDB 8+: [download link](https://www.mongodb.com/download-center/community) and [installation instructions](https://docs.mongodb.com/manual/administration/install-community/)
 * System dependencies for Canvas:
   ```bash
@@ -427,7 +449,7 @@ From port 8090 to 8093 and wsPort from 10090 to 10093.
 
 1. **Install PM2 globally**:
    ```bash
-   yarn install -g pm2
+   npm installl -g pm2
    ```
 
 2. **Run the server cluster**:
@@ -891,7 +913,29 @@ Kode sumber Pony Town dirilis ke domain publik (*public domain*). Aset gambar/se
 ### 2. Persyaratan Sistem
 
 * **Sistem Operasi**: Ubuntu 24.04.4 LTS (Sangat Direkomendasikan) atau Debian.
-* [Node.js](https://nodejs.org/en/download/) (versi 24 LTS)
+* **Node.js 24 & Yarn**: Kami menyarankan Anda untuk menggunakan `nvm` (Node Version Manager) dalam menginstal dan mengatur versi Node.js.
+
+  ```bash
+  # Mengunduh dan menginstal nvm:
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+
+  # Memuat nvm tanpa harus mengulang/me-restart terminal:
+  \. "$HOME/.nvm/nvm.sh"
+
+  # Mengunduh dan menginstal Node.js (versi 24):
+  nvm install 24
+
+  # Verifikasi versi Node.js (Harus memunculkan tulisan "v24.x.x"):
+  node -v
+
+  # Mengaktifkan corepack untuk mengunduh dan menginstal Yarn:
+  corepack enable yarn
+  corepack prepare yarn@stable --activate
+
+  # Verifikasi versi Yarn:
+  yarn -v
+  ```
+
 * MongoDB 8+: [tautan unduhan](https://www.mongodb.com/download-center/community) dan [petunjuk instalasi](https://docs.mongodb.com/manual/administration/install-community/)
 * Dependensi sistem untuk Canvas:
   ```bash
@@ -1265,7 +1309,7 @@ Dari port 8090 jadi 8093 dan wsPort dari 10090 jadi 10093.
 
 1. **Instal PM2 secara global**:
    ```bash
-   yarn install -g pm2
+   npm install -g pm2
    ```
 
 2. **Jalankan kluster server**:

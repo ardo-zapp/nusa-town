@@ -32,7 +32,7 @@
 				fa-icon([icon]="icon(p.id)" [fixedWidth]="true" size="lg")
 				.sr-only Sign in using {{p.name}}
 
-	div(*ngIf="true")
+	div(*ngIf="local")
 		.btn-group.dropdown(dropdown)
 			button.btn.btn-lg.btn-dark.dropdown-toggle(dropdownToggle)
 				| Mock login

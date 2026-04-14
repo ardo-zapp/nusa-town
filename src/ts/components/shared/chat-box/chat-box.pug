@@ -1,7 +1,7 @@
 .chat-box(#chatBox)
 	div(#chatBoxInput)
 		input.chat-input#chat-input(
-			#inputElement [(ngModel)]="message" (ngModelChange)="onMessageChange()" (keydown)="keydown($event)" [maxlength]="maxSayLength"
+			#inputElement [(ngModel)]="message" (input)="updateTypingIndicator()" (ngModelChange)="onMessageChange()" (keydown)="keydown($event)" [maxlength]="maxSayLength"
 			aria-label="Chat message")
 		.command-suggestions([hidden]="commandSuggestions.length === 0")
 			ul.list-unstyled

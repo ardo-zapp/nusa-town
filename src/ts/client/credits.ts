@@ -19,9 +19,9 @@ export interface Contributors {
 export const CREDITS: Credit[] = [
 		{
 		name: 'Ardo Zapp',
-		title: 'Owner / Programmer',
+		title: 'Owner / Lead Developer',
 		avatarImage: 'ardo-zapp.webp',
-		links: ['https://www.facebook.com/ardo.zapp', 'https://x.com/ardo_zapp'],
+		links: ['https://www.facebook.com/ardo.zapp', 'https://github.com/ardo-zapp'],
 		},
 		{
 		name: 'Rinonmac',
@@ -30,9 +30,9 @@ export const CREDITS: Credit[] = [
 		links: ['https://github.com/rinonmac'],
 		},
 		{
-		name: 'LandBurner',
+		name: 'Land Burner',
 		title: 'Artist / Admin',
-		avatarImage: 'landburner.webp',
+		avatarImage: 'land-burner.webp',
 		links: ['https://www.facebook.com/ikkrifik'],
 		},
 		{
@@ -42,9 +42,9 @@ export const CREDITS: Credit[] = [
 		links: ['https://www.facebook.com/ohzuya.gaming.5'],
 		},
 		{
-		name: 'K1mna',
+		name: 'Kimmy Alina',
 		title: 'Artist',
-		avatarImage: 'k1mna.webp',
+		avatarImage: 'kimmy-alina.webp',
 		links: ['https://www.instagram.com/k1mmyal1na/'],
 		},
 		{
@@ -54,8 +54,8 @@ export const CREDITS: Credit[] = [
 		links: ['https://facebook.com/dex.vortex'],
 		},
 		{
-		name: 'Shozo_Fox',
-		title: 'Artist',
+		name: 'Shozo Fox',
+		title: 'Moderator',
 		avatarImage: 'shozo-fox.webp',
 		links: ['https://www.tiktok.com/@shozo_fox', 'https://www.instagram.com/shozofox'],
 		},

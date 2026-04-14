@@ -112,7 +112,7 @@ const providerList: OAuthProviderInfo[] = [
 		id: 'google',
 		name: 'Google',
 		color: '#DC4A3D',
-		connectOnly: true,
+		connectOnly: false,
 		strategy: GoogleStrategy,
 	},
 	{
