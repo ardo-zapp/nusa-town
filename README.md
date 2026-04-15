@@ -111,6 +111,7 @@ yarn install
 To start configuring your server, simply copy the template provided:
 
 ```bash
+cp .env.example .env
 cp config-template.json config.json
 ```
 
@@ -880,7 +881,7 @@ cd docker && docker-compose exec game-main node cli.js --addrole <account_id> su
 
 ## Bahasa Indonesia
 
-Sebuah gim daring tentang para kuda poni yang sedang membangun kota.
+Permainan kuda poni membangun kota.
 
 Nusa Town adalah proyek Pony Town Custom Server yang telah dimodifikasi dengan mengusung tema Nusantara (Indonesia). Proyek ini dirancang sebagai fondasi dasar yang masih bisa Anda kembangkan lebih lanjut, sehingga Anda bebas mengedit dan menyesuaikannya dengan kebutuhan komunitas Anda.
 
@@ -971,6 +972,7 @@ yarn install
 Untuk mulai mengkonfigurasi server Anda, cukup salin file template yang sudah disediakan:
 
 ```bash
+cp .env.example .env
 cp config-template.json config.json
 ```
 

@@ -13,13 +13,16 @@ const imagemin = require('gulp-imagemin');
 const autoprefixer = require('gulp-autoprefixer');
 const liveServer = require('gulp-live-server');
 const sizereport = require('gulp-sizereport');
-const markdownTree = require('markdown-tree');
+const { parse } = require('marked');
+require('markdown-tree');
 const del = require('del');
-const mocha = require('gulp-spawn-mocha');
+const gulpMocha = require('gulp-spawn-mocha');
 const remapIstanbul = require('remap-istanbul/lib/gulpRemapIstanbul');
 const spawn = require('child_process').spawn;
 const argv = require('yargs').argv;
 const config = require('./config.json');
+
+config.nochangelog = undefined;
 const stamp = Math.floor(Math.random() * 0xffffffff);
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
 const HASH = _.range(0, 10).map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -44,14 +47,13 @@ const readFile = src => fs.readFileSync(src, { encoding: 'utf-8' });
 
 const lintCode = code => (code.trim() + '\n')
 	.replace(/\r\n/g, '\n')
-	.replace(/  /g, '\t')
+	.replace(/ {2}/g, '\t')
 	.replace(/"/g, "'");
 
 /**
- * Helper to run Yarn scripts asynchronously.
- * Note: Yarn 4+ handles arguments directly without the need for '--' separator.
+ * Helper to run Yarn scripts asynchronously
  */
-const yarnScript = (name, args = []) => {
+const npmScript = (name, args = []) => {
 	const func = () => runAsync(process.platform === 'win32' ? 'yarn.cmd' : 'yarn', ['run', name, ...args]);
 	func.displayName = `yarn run ${name}`;
 	return func;
@@ -90,43 +92,30 @@ const manifest = cb => {
 		]
 	};
 
-	fs.writeFile('src/ts/generated/changelog.ts', JSON.stringify(json, null, 2), 'utf8', cb);
+	fs.writeFile('assets/manifest.json', JSON.stringify(json, null, 2), 'utf8', cb);
 };
 
-/**
- * Synchronizes gamepad-mappings from the correct generated template directory.
- */
-const gamepad = cb => {
-	const src = path.join('src', 'ts', 'generated', 'gamepad-template.ts');
-	const dest = path.join('src', 'ts', 'generated', 'gamepad-mappings.ts');
-
-	if (fs.existsSync(src)) {
-		fs.copyFileSync(src, dest);
-	} else {
-		console.error(`Gamepad template not found at: ${src}`);
-	}
-	cb();
-};
-
-const sprites = () => Promise.resolve() // del(['tools/output/images/*'])
+const sprites = () => Promise.resolve()
 	.then(() => runAsync('node', ['src/scripts/tools/create-sprites.js']))
 	.then(() => gulp.src('tools/output/images/*', { encoding: false })
 		.pipe(gulpif(!argv.fast, imagemin()))
 		.pipe(gulp.dest('assets/images')));
 
 const changelog = cb => {
-	const changelog = readFile('CHANGELOG.md');
-	const tree = markdownTree(changelog);
-	const object = config.nochangelog ? [] : tree.children.map(c => ({
-		version: c.text,
-		changes: c.tokens
-			.map(t => t.text)
-			.filter(x => x)
-			.map(x => x.replace(/^\[test\]/, '<span class="badge badge-secondary">test</span>')),
-	}));
-	const type = `{ version: string; changes: string[]; }[]`;
+	const changelogText = readFile('CHANGELOG.md');
+	const versions = changelogText.split(/^#### /m).filter(x => x.trim());
+	const object = config.nochangelog ? [] : versions.map(v => {
+		const lines = v.split('\n');
+		const version = lines[0].trim();
+		const bodyMarkdown = lines.slice(1).join('\n').trim().replace(/\[test]/g, '<span class="badge badge-secondary">test</span>');
+		return {
+			version,
+			html: parse(bodyMarkdown)
+		};
+	});
+	const type = `{ version: string; html: string; }[]`;
 	const code = `/* tslint:disable */\n\nexport const CHANGELOG: ${type} = ${JSON.stringify(object, null, 2)};\n`;
-	fs.writeFile('src/ts/generated/changelog.ts', code, 'utf8', cb);
+	fs.writeFile('src/ts/generated/changelog.ts', lintCode(code), 'utf8', cb);
 };
 
 const icons = cb => {
@@ -136,11 +125,11 @@ const icons = cb => {
 	const getIconCode = src => JSON.stringify(require(`./${src}`).definition);
 	const iconsTs = readFile('src/ts/client/icons.ts');
 	const matched = _.uniq(iconsTs.match(/\bfa[A-Z]\S*\b/g));
-	const icons = matched.map(m => ({
+	const iconsData = matched.map(m => ({
 		name: m,
 		code: fs.existsSync(path.join(root1, `${m}.js`)) ? getIconCode(path.join(root1, `${m}.js`)) : getIconCode(path.join(root2, `${m}.js`)),
 	})).sort((a, b) => a.name.localeCompare(b.name));
-	const code = `/* tslint:disable */\n\n${icons.map(({ name, code }) => `export const ${name} = ${code};`).join('\n')}`;
+	const code = `/* tslint:disable */\n\n${iconsData.map(({ name, code }) => `export const ${name} = ${code};`).join('\n')}`;
 	fs.writeFile('src/ts/generated/fa-icons.ts', lintCode(code), 'utf8', cb);
 };
 
@@ -196,7 +185,7 @@ const assetsCopy = () => gulp.src('assets/**/*', { encoding: false })
 
 function buildSass(name, src, dest) {
 	const result = () => gulp.src([src], { base: 'src' })
-		.pipe(sass({
+		.pipe(sass.sync({
 			includePaths: ['src/styles/'],
 			silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin', 'color-functions', 'slash-div'],
 			quietDeps: true,
@@ -216,25 +205,29 @@ const sassAdmin = buildSass('admin', 'src/styles/style-admin.scss', 'build/asset
 const sassTasks = gulp.series(sassMain, sassInline, sassTools, sassAdmin);
 
 const testScripts = ['src/scripts/tests/**/*.js'];
-const ts = yarnScript('ts');
+const ts = npmScript('ts');
+
+const mochaTestConfig = {
+	exit: true,
+	reporter: 'progress',
+	timeout: 10000,
+};
+
+const mochaCoverageConfig = {
+	exit: true,
+	reporter: 'progress',
+	timeout: 10000,
+	istanbul: {
+		print: 'none',
+	},
+};
 
 const tests = () => gulp.src(testScripts, { read: false })
-	.pipe(mocha({
-		exit: true,
-		reporter: 'progress',
-		timeout: 10000,
-	}))
+	.pipe(gulpMocha(mochaTestConfig))
 	.on('error', swallowError);
 
 const coverage = () => gulp.src(testScripts, { read: false })
-	.pipe(mocha({
-		exit: true,
-		reporter: 'progress',
-		timeout: 10000,
-		istanbul: {
-			print: 'none',
-		},
-	}));
+	.pipe(gulpMocha(mochaCoverageConfig));
 
 const remap = () => gulp.src('coverage/coverage.json')
 	.pipe(remapIstanbul({ reports: { html: 'coverage-remapped' } }));
@@ -252,10 +245,10 @@ const music = () => gulp.src(path.join(config.assetsPath, 'assets/music/*.wav'),
 		'ffmpeg -y -i "<%= file.path %>" -acodec libmp3lame "<%= out(file.path, ".mp3") %>"',
 		'ffmpeg -y -i "<%= file.path %>" -acodec libvorbis "<%= out(file.path, ".webm") %>"',
 	], {
-			templateData: {
-				out: (file, ext) => path.join('assets', 'music', path.basename(file, '.wav') + ext),
-			}
-		}));
+		templateData: {
+			out: (file, ext) => path.join('assets', 'music', path.basename(file, '.wav') + ext),
+		}
+	}));
 
 const serverDev = cb => {
 	if (!argv.noserver) {
@@ -286,35 +279,14 @@ const serverDev = cb => {
 	cb();
 };
 
-let webpackScript = 'webpack-prod';
-const webpackArgs = []; // Fix: Removed '--' for Yarn 4 compatibility
+const webpackProd = npmScript(argv.parallel ? 'webpack-prod-parallel' : (argv.debug ? 'webpack-debug' : (argv.main ? 'webpack-main' : 'webpack-prod')),
+	[...(argv.beta ? ['--env.beta'] : []), ...(argv.timing ? ['--env.timing'] : [])]);
 
-if (argv.parallel) {
-	webpackScript = 'webpack-prod-parallel';
-}
-
-if (argv.debug) {
-	webpackScript = 'webpack-debug';
-}
-
-if (argv.main) {
-	webpackScript = 'webpack-main';
-}
-
-if (argv.beta) {
-	webpackArgs.push('--env.beta');
-}
-
-if (argv.timing) {
-	webpackArgs.push('--env.timing');
-}
-
-const webpackProd = yarnScript(webpackScript, webpackArgs);
-const webpackAdmin = yarnScript('webpack-admin');
-const sw = yarnScript('sw');
+const webpackAdmin = npmScript('webpack-admin');
+const sw = npmScript('sw');
 
 const assets = gulp.series(assetsCopy, assetsRev);
-const common = gulp.series(gamepad, manifest, hash, rollbar, changelog, icons, shaders, assets, sassTasks);
+const common = gulp.series(manifest, hash, rollbar, changelog, icons, shaders, assets, sassTasks);
 const covRemap = gulp.series(coverage, remap);
 
 const watch = cb => {
@@ -332,12 +304,9 @@ const watch = cb => {
 
 const watchTools = cb => {
 	if (argv.sprites) {
-		// gulp.watch(['src/scripts/tools/**/*.js'], { debounceDelay: 1000 }, sprites);
 		gulp.watch(['src/ts/tools/trigger.txt'], sprites);
 		gulp.watch(['assets/**/*'], { debounceDelay: 1000, readDelay: 1000 }, assets);
-		// gulp.watch([path.join(config.assetsPath, 'assets/**/*')], { debounceDelay: 1000, readDelay: 1000 }, sprites);
 	}
-
 	cb();
 };
 
@@ -352,20 +321,16 @@ const setProd = cb => {
 	cb();
 };
 
-const warnAboutTscBeingDumb = cb => {
-	console.log("You're probably about to see some warnings from tsc about not being able to find certain files.");
-	console.log("Don't worry about these. It's a known issue regarding circular build dependencies. The build should continue despite these errors.");
-	cb();
-};
+const warnAboutTscBeingDumb = cb => { console.log('You might see warnings'); cb(); };
 
 const empty = cb => cb();
-const tsTools = gulp.series(warnAboutTscBeingDumb, yarnScript('ts-tools'));
-const spritesTask = argv.sprites ? sprites : empty;
+const tsTools = gulp.series(warnAboutTscBeingDumb, npmScript('ts-tools'));
 const buildSprites = gulp.series(tsTools, sprites);
+const spritesTask = argv.sprites ? buildSprites : empty;
 
 const build = gulp.series(clean, setProd, common, ts, webpackProd, sw, size);
 const admin = gulp.series(clearnAdmin, setProd, sassAdmin, ts, webpackAdmin);
-const dev = gulp.series(clean, spritesTask, common, gulp.parallel(serverDev, watch, watchTools));
+const dev = gulp.series(clean, ts, spritesTask, common, gulp.parallel(serverDev, watch, watchTools));
 
 module.exports = {
 	music,

@@ -83,8 +83,7 @@ export const CONTRIBUTORS: Contributors[] = [
 		{
 		group: 'Programmers',
 		contributors: [
-		{ name: 'Industrialice' },
-		{ name: 'Thorn Rose', links: ['https://github.com/Thorn-Rose'] },
+		{ name: 'Ardo Zapp', links: ['https://github.com/ardo-zapp'] },
 		],
 		},
 		{
