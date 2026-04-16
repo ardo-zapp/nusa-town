@@ -384,7 +384,7 @@ npx gulp dev            # terminal 3
 npx gulp test           # terminal 4 (optional)
 ```
 
-#### Useful NPM & Gulp Scripts
+#### Useful YARN & Gulp Scripts
 The `package.json` file contains several built-in scripts to aid your development and deployment workflows. Here are the most important ones:
 
 | Command | Description |
@@ -1245,7 +1245,7 @@ yarn wds             # terminal 2
 npx gulp dev            # terminal 3
 npx gulp test           # terminal 4 (opsional)
 ```
-#### Skrip NPM & Gulp Penting
+#### Skrip YARN & Gulp Penting
 File `package.json` menyertakan berbagai skrip bawaan untuk mempermudah alur kerja (workflow). Berikut adalah perintah utama yang sering digunakan:
 
 | Perintah | Fungsi |
@@ -1268,7 +1268,7 @@ File `package.json` menyertakan berbagai skrip bawaan untuk mempermudah alur ker
 
 Jika Anda ingin situs game menyimpan *cache asset* secara agresif dan bertindak seperti aplikasi lokal (Progressive Web App / Offline mode), pastikan fitur ini aktif dengan mengatur nilai `"sw": true` di `config.json`.
 
-Kemudian, Anda harus menjalankan skrip NPM berikut untuk men-generate logic file service worker tersebut:
+Kemudian, Anda harus menjalankan skrip YARN berikut untuk men-generate logic file service worker tersebut:
 ```bash
 yarn sw
 ```

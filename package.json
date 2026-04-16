@@ -40,9 +40,9 @@
     "test-ts": "node --no-warnings --max-old-space-size=8192 ./node_modules/mocha/bin/mocha \"src/ts/tests/**/*.spec.ts\" -r ts-node/register -R progress --exit",
     "test-ts-watch": "yarn test-ts --watch --watch-extensions ts",
     "test-inspect": "mocha \"src/scripts/tests/**/*.spec.js\" -R progress --inspect --exit --watch",
-    "update-angular": "npm update @angular/common @angular/compiler @angular/core @angular/forms @angular/platform-browser @angular/platform-browser-dynamic @angular/router @angular/animations @angular/compiler-cli @angular/platform-server @angular/cdk --save",
-    "latest-angular": "npm i @angular/common@latest @angular/compiler@latest @angular/core@latest @angular/forms@latest @angular/platform-browser@latest @angular/platform-browser-dynamic@latest @angular/router@latest @angular/animations@latest @angular/compiler-cli@latest @angular/platform-server@latest @angular/cdk@latest --save",
-    "update-fontawesome": "npm update @fortawesome/fontawesome-svg-core @fortawesome/free-brands-svg-icons @fortawesome/free-solid-svg-icons @fortawesome/angular-fontawesome --save"
+    "update-angular": "yarn update @angular/common @angular/compiler @angular/core @angular/forms @angular/platform-browser @angular/platform-browser-dynamic @angular/router @angular/animations @angular/compiler-cli @angular/platform-server @angular/cdk --save",
+    "latest-angular": "yarn i @angular/common@latest @angular/compiler@latest @angular/core@latest @angular/forms@latest @angular/platform-browser@latest @angular/platform-browser-dynamic@latest @angular/router@latest @angular/animations@latest @angular/compiler-cli@latest @angular/platform-server@latest @angular/cdk@latest --save",
+    "update-fontawesome": "yarn update @fortawesome/fontawesome-svg-core @fortawesome/free-brands-svg-icons @fortawesome/free-solid-svg-icons @fortawesome/angular-fontawesome --save"
   },
   "overrides": {
     "vinyl-fs": "4.0.2"

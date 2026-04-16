@@ -53,7 +53,7 @@ const lintCode = code => (code.trim() + '\n')
 /**
  * Helper to run Yarn scripts asynchronously
  */
-const npmScript = (name, args = []) => {
+const yarnScript = (name, args = []) => {
 	const func = () => runAsync(process.platform === 'win32' ? 'yarn.cmd' : 'yarn', ['run', name, ...args]);
 	func.displayName = `yarn run ${name}`;
 	return func;
@@ -205,7 +205,7 @@ const sassAdmin = buildSass('admin', 'src/styles/style-admin.scss', 'build/asset
 const sassTasks = gulp.series(sassMain, sassInline, sassTools, sassAdmin);
 
 const testScripts = ['src/scripts/tests/**/*.js'];
-const ts = npmScript('ts');
+const ts = yarnScript('ts');
 
 const mochaTestConfig = {
 	exit: true,
@@ -279,11 +279,11 @@ const serverDev = cb => {
 	cb();
 };
 
-const webpackProd = npmScript(argv.parallel ? 'webpack-prod-parallel' : (argv.debug ? 'webpack-debug' : (argv.main ? 'webpack-main' : 'webpack-prod')),
+const webpackProd = yarnScript(argv.parallel ? 'webpack-prod-parallel' : (argv.debug ? 'webpack-debug' : (argv.main ? 'webpack-main' : 'webpack-prod')),
 	[...(argv.beta ? ['--env.beta'] : []), ...(argv.timing ? ['--env.timing'] : [])]);
 
-const webpackAdmin = npmScript('webpack-admin');
-const sw = npmScript('sw');
+const webpackAdmin = yarnScript('webpack-admin');
+const sw = yarnScript('sw');
 
 const assets = gulp.series(assetsCopy, assetsRev);
 const common = gulp.series(manifest, hash, rollbar, changelog, icons, shaders, assets, sassTasks);
@@ -324,7 +324,7 @@ const setProd = cb => {
 const warnAboutTscBeingDumb = cb => { console.log('You might see warnings'); cb(); };
 
 const empty = cb => cb();
-const tsTools = gulp.series(warnAboutTscBeingDumb, npmScript('ts-tools'));
+const tsTools = gulp.series(warnAboutTscBeingDumb, yarnScript('ts-tools'));
 const buildSprites = gulp.series(tsTools, sprites);
 const spritesTask = argv.sprites ? buildSprites : empty;
 

@@ -1,12 +1,16 @@
 .idea/
+.vs/
+
 node_modules/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
+.pnp.*
 
-/build/
-/build-copy/
-/logs/
-/settings/
-
-/.vs
+build/
+build-copy/
+logs/
+settings/
 
 /src/ts/generated/*
 !/src/ts/generated/gamepad-template.ts
@@ -17,5 +21,5 @@ node_modules/
 /assets/images/pony2.png
 /assets/images/pony2a.png
 
-/config.json
+config.json
 .env
