@@ -59,12 +59,34 @@ export function formatDuration(duration: number) {
 		return `${s}s`;
 	}
 }
+// format date with dots: YYYY.MM.DD
+export function formatDotDate(date: Date) {
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, '0');
+	const day = date.getDate().toString().padStart(2, '0');
+	return `${year.toString().padStart(4, '0')}.${month}.${day}`;
+}
 
+// format ISO date: YYYY-MM-DD
 export function formatISODate(date: Date) {
 	const year = date.getFullYear();
-	const month = date.getMonth() + 1;
-	const day = date.getDate();
-	return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+	const month = (date.getMonth() + 1).toString().padStart(2, '0');
+	const day = date.getDate().toString().padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+// format playtime (seconds) into "Xd, Yhours, Zmin". If less than 60s or undefined returns 'No Played'
+export function formatPlaytime(seconds?: number) {
+	if (!seconds || seconds < 60) return 'No Played';
+	const s = Math.floor(seconds);
+	const days = Math.floor(s / 86400);
+	const hours = Math.floor((s % 86400) / 3600);
+	const minutes = Math.floor((s % 3600) / 60);
+	const parts: string[] = [];
+	if (days > 0) parts.push(`${days}d`);
+	if (hours > 0) parts.push(`${hours}hours`);
+	if (minutes > 0) parts.push(`${minutes}min`);
+	return parts.join(', ');
 }
 
 export function parseISODate(value: string) {
@@ -230,6 +252,24 @@ export function last<T>(array: T[]): T | undefined {
 
 export function flatten<T>(arrays: T[][]): T[] {
 	return ([] as T[]).concat(...arrays);
+}
+
+// Align two columns within a fixed width. Right column may be omitted.
+// Ensures the right column (e.g., counter) always starts at the same column
+// and trims the left column with '...' if it doesn't fit.
+export function alignColumns(left: string, right: string | undefined, width: number) {
+	const rightStr = right || '';
+	const rightLen = rightStr.length;
+	// leave at least one space between columns
+	const leftMax = Math.max(0, width - rightLen - 1);
+	let leftTrim = left;
+
+	if (leftTrim.length > leftMax) {
+		leftTrim = leftTrim.slice(0, Math.max(0, leftMax - 3)) + '...';
+	}
+
+	const padding = Math.max(1, width - leftTrim.length - rightLen);
+	return leftTrim + ' '.repeat(padding) + rightStr;
 }
 
 export function at<T>(items: T[], index: any): T | undefined {

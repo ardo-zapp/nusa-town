@@ -11,7 +11,7 @@ import {
 import { CharacterState, ServerConfig, AccountState, CharacterStateFlags, GameServerSettings } from '../common/adminInterfaces';
 import {
 	EntityState, Expression, PonyOptions, Action, ExpressionExtra, Eye, Muzzle, getMuzzleOpenness,
-	isExpressionAction, EntityPlayerState, UpdateFlags, InteractAction, Rect
+	isExpressionAction, EntityPlayerState, UpdateFlags, InteractAction, Rect, MessageType
 } from '../common/interfaces';
 import { encodeExpression, EMPTY_EXPRESSION, decodeExpression } from '../common/encoders/expressionEncoder';
 import { EXPRESSION_TIMEOUT, DAY, FLY_DELAY, SECOND, PONY_TYPE } from '../common/constants';
@@ -37,7 +37,7 @@ import {
 import { withBorder } from '../common/rect';
 import { isOnlineFriend } from './services/friends';
 import { grapePurple, grapeGreen, tools } from '../common/entities';
-import { saySystem } from './chat';
+import { saySystem, sayToOthers } from './chat';
 
 export function isMutedOrShadowed(client: IClient) {
 	return client.shadowed || isMuted(client.account);
@@ -158,6 +158,9 @@ export function createClient(
 	client.saysQueue = [];
 	client.unsubscribes = [];
 	client.subscribes = [];
+
+	// command tracking
+	client.lastToysCommandTime = 0;
 
 	client.positions = [];
 
@@ -702,6 +705,30 @@ export function getCollectedToysCount(client: IClient) {
 	return { collected, total };
 }
 
+export function getCollectedToysList(client: IClient): number[] {
+	const stateToys = toInt((client.account.state || {}).toys);
+	const result: number[] = [];
+
+	for (let i = 0, bit = 1; i < toys.length; i++ , bit <<= 1) {
+		if (stateToys & bit) {
+			result.push(toys[i].type);
+		}
+	}
+
+	return result;
+}
+
+export function useToyStash(client: IClient) {
+	const opt = getNextToyOrExtra(client);
+	updateEntityOptions(client.pony, opt);
+
+	if (opt.toy && opt.toy > 0) {
+		saySystem(client, `#${opt.toy}`);
+	} else if (opt.extra) {
+		saySystem(client, `#extra`);
+	}
+}
+
 export function getNextToyOrExtra(client: IClient) {
 	const collectedToys = toInt((client.account.state || {}).toys);
 	const options = client.pony.options || {};
@@ -739,10 +766,17 @@ export function openGift(client: IClient) {
 
 		const state = client.account.state || {};
 
+		const was0 = toInt(state.toys) === 0;
+
 		if (!hasToyUnlocked(toyType, toInt(state.toys))) {
 			updateAccountState(client.account, state => {
 				state.toys = unlockToy(toyType, toInt(state.toys));
 			});
+
+			if (was0) {
+				sayToOthers(client, 'you collected your first toy', MessageType.Announcement, undefined, {} as any);
+			}
+			sayToOthers(client, `unlocked toy #${toyType}`, MessageType.Announcement, undefined, {} as any);
 		}
 	}
 }

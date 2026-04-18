@@ -135,6 +135,7 @@ describe('playerUtils', () => {
 				lastPacket: 123,
 				lastBoopOrKissAction: 0,
 				lastExpressionAction: 0,
+				lastToysCommandTime: 0,
 				lastX: 10,
 				lastY: 20,
 				lastTime: 0,

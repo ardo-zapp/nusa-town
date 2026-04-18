@@ -1019,7 +1019,7 @@ export class PonyTownGame implements Game {
 						} else if (entityInRange(pickedEntity, player)) {
 							server.interact(pickedEntity.id);
 						}
-					// фича, которая делает взгляд только на дабл-клик
+					// Feature that limits look direction to double click only
 					} else if (distanceXY(player.x, player.y, hover.x, hover.y) < TILE_CHANGE_RANGE) {
 						const nowClick = performance.now();
 						const lastTime = (this as any)._lastEyeClickTime as number | undefined;
@@ -1039,7 +1039,7 @@ export class PonyTownGame implements Game {
 							player.expr = encodeExpression(newExpr);
 							this.onActionsUpdate.next();
 						} else if (isDouble) {
-							// начало фичи: 8 векторов / по дабл-кликам
+							// Feature start: 8 direction vectors by double click
 							const dx = hover.x - player.x;
 							const dy = hover.y - player.y;
 							if (dx !== 0 || dy !== 0) {
@@ -1050,9 +1050,9 @@ export class PonyTownGame implements Game {
 								let iris: Iris = Iris.Forward;
 								switch (sector) {
 									case 0: iris = Iris.Left; break;    // E
-									case 1: iris = Iris.Left; break;    // SE (н.п тебе для эмуляции левого низа)
+									case 1: iris = Iris.Left; break;    // SE (e.g. for emulating bottom left)
 									case 2: iris = Iris.Down; break;     // S
-									case 3: iris = Iris.Right; break;     // SW (н.п для эмуляции левого низа)
+									case 3: iris = Iris.Right; break;     // SW (e.g. for emulating bottom left)
 									case 4: iris = Iris.Right; break;     // W
 									case 5: iris = Iris.UpRight; break;   // NW
 									case 6: iris = Iris.Up; break;       // N
@@ -1153,7 +1153,7 @@ export class PonyTownGame implements Game {
 					}
 				}
 
-				// взгляд по numpad
+				// Look direction by numpad
 				if (input.wasPressed(Key.NUMPAD_4)) this.setIris(Iris.Right);
 				if (input.wasPressed(Key.NUMPAD_6)) this.setIris(Iris.Left);
 				if (input.wasPressed(Key.NUMPAD_8)) this.setIris(Iris.Up);
@@ -1890,8 +1890,29 @@ export class PonyTownGame implements Game {
 					const low = this.disableLighting ? ' LOW' : '';
 					const extraStats = this.extraStats;
 					const palSize = ` pal ${this.paletteManager.textureSize}`;
-					value = `${extraStats}${engine} ${fps} fps ${sent}/${recv} kb/s ${ponies} ` +
-						`ponies ${extra}${gl2}${low}${palSize}`.trim();
+					const coords = this.player ? ` Your Cords: X${Math.round(this.player.x)} Y${Math.round(this.player.y)}` : '';
+					value = `${extraStats}${engine} ${fps} fps ${sent}/${recv} kb/s ${ponies} ponies${coords} ${extra}${gl2}${low}${palSize}`.trim();
+				}
+
+				try {
+					const parent = this.statsText && (this.statsText.parentElement || this.statsText.parentNode);
+					const parentEl = parent instanceof HTMLElement ? parent : null;
+
+					if (parentEl) {
+						parentEl.style.right = '';
+						parentEl.style.bottom = '';
+
+						// New stats position (top center)
+						parentEl.style.position = 'absolute';
+						parentEl.style.top = '8px';
+						parentEl.style.left = '50%';
+						parentEl.style.transform = 'translateX(-50%)';
+						parentEl.style.textAlign = 'center';
+						parentEl.style.pointerEvents = 'none';
+						parentEl.style.zIndex = '9999';
+					}
+				} catch (e) {
+					// fallback on error
 				}
 
 				if (value !== this.statsTextValue) {

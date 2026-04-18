@@ -6,9 +6,6 @@ h1(focusTitle) Account settings
 			.form-group
 				h3 Account details
 			.form-group
-				label(for="account-id") Account ID
-				input#account-id.form-control([value]="account?.id" readonly)
-			.form-group
 				label(for="account-name") Account Name
 				input#account-name.form-control(
 					type="text" name="name" [(ngModel)]="data.name" required [maxlength]="nameMaxLength")
@@ -28,6 +25,25 @@ h1(focusTitle) Account settings
 				button.btn.btn-default(type="submit" [disabled]="!canSubmit" style="min-width: 100px;")
 					| {{saveButtonText}}
 
+		ng-template(#copyTooltip)
+			.text-left
+				p {{ idCopied ? 'Your ID Copied!' : 'Copy' }}
+		div(style="margin-bottom: 100px;")
+			.form-group
+				h3.mb-3(style="color: #fff;") Account info
+				.account-info-box(
+					style="background-color: #222; padding: 15px; border-radius: 5px;"
+				)
+					.mb-2(style="color: #9c9c9c;")
+						strong Account ID:
+						code {{account?.id || '-'}}
+						a.icon-button.ml-2.cursor-pointer(*ngIf="account?.id" (click)="copyId(account!.id)" [tooltip]="copyTooltip" placement="top" containerClass="tooltip-desc" aria-label="Copy account id")
+							fa-icon([icon]="copyIcon" size="xs")
+					.mb-2(style="color: #9c9c9c;")
+						strong Creation date:
+						| {{account?.creationDate || '-'}}
+					.mb-2(style="color: #9c9c9c;")
+						strong(style="color: #9c9c9c;") Total playtime: #[span.ml-1 {{ formatPlaytime(account?.playtimeSeconds) }}]
 		div(style="margin-bottom: 100px;")
 			.form-group
 				h3 Connected social accounts

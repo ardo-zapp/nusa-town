@@ -7,7 +7,7 @@ import { IAccount, ICharacter, IAuth } from './db';
 import { TokenService, TokenData } from './serverInterfaces';
 import { AccountFlags, CharacterFlags, InternalGameServerState } from '../common/adminInterfaces';
 import { supporterLevel, isPastSupporter } from '../common/adminUtils';
-import { hasFlag, cloneDeep, formatISODate } from '../common/utils';
+import { hasFlag, cloneDeep, formatISODate, formatDotDate } from '../common/utils';
 import * as paths from './paths';
 
 export function tokenService(socket: Server): TokenService {
@@ -35,6 +35,10 @@ export function toAccountData(account: IAccount): AccountData {
 		id: _id.toString(),
 		name, characterCount,
 		birthdate: birthdate && formatISODate(birthdate) || '',
+		/** creation date formatted with dots YYYY.MM.DD */
+		creationDate: account.createdAt && formatDotDate(account.createdAt) || '',
+		/** playtime in seconds (stored in account.counters.playtime) */
+		playtimeSeconds: account.counters && (account.counters as any).playtime ? (account.counters as any).playtime : undefined,
 		birthyear,
 		settings: cloneDeep(settings || {}),
 		supporter: supporterLevel(account) || undefined,

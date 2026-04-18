@@ -151,6 +151,8 @@ export class ServerActions implements IServerActions, SocketServer {
 		await Promise.all([
 			this.accountService.updateAccount(this.client.accountId, { lastVisit: new Date(), state: this.account.state }),
 			this.accountService.updateCharacterState(this.client.characterId, state),
+			// increment playtime (stored in seconds in counters.playtime)
+			this.accountService.updateAccount(this.client.accountId, { $inc: { ['counters.playtime']: Math.round(duration / 1000) } as any }).catch(() => { /* ignore update errors */ }),
 		]);
 	}
 	@Method({ rateLimit: '2/s', binary: [Bin.U32, Bin.Str, Bin.U8] })
