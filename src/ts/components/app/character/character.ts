@@ -1,5 +1,5 @@
 import { saveAs } from 'file-saver';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { clamp } from 'lodash';
 import { PLAYER_NAME_MAX_LENGTH, PLAYER_DESC_MAX_LENGTH } from '../../../common/constants';
 import {
@@ -61,7 +61,9 @@ function eyeSprite(e: PonyEye | undefined) {
 	styleUrls: ['character.scss'],
 })
 export class Character implements OnInit, OnDestroy {
+	@ViewChild('characterPreview', { static: true }) characterPreview!: any;
 	readonly debug = DEVELOPMENT || BETA;
+	previewScale: number = 3;
 	readonly playIcon = faPlay;
 	readonly lockIcon = faLock;
 	readonly saveIcon = faSave;
@@ -131,6 +133,7 @@ export class Character implements OnInit, OnDestroy {
 		this.createMuzzles();
 		this.updateMuzzles();
 	}
+
 	private getMuzzleType() {
 		return clamp(toInt(this.info && this.info.nose && this.info.nose.type), 0, sprites.noses[0].length);
 	}
@@ -280,9 +283,21 @@ export class Character implements OnInit, OnDestroy {
 		clearInterval(this.interval);
 	}
 	changed() {
+		// normalize a few fields to prevent invalid UI state (e.g. strings or out-of-range numbers)
+		this.info.flip = !!this.info.flip;
+		this.info.headTurned = !!this.info.headTurned;
+		this.info.headTurn = Math.max(0, Math.min(6, (this.info.headTurn === undefined ? 0 : (this.info.headTurn as any) | 0)));
+
+		// if head is forced turned by default, keep headTurn at 0 to avoid large offsets
+		if (this.info.headTurned) {
+			this.info.headTurn = 0;
+		}
+
 		if (!this.syncTimeout) {
 			this.syncTimeout = requestAnimationFrame(() => {
 				this.syncTimeout = undefined;
+				// force preview redraw so flip/head settings apply immediately
+				try { this.characterPreview && this.characterPreview.blink && this.characterPreview.blink(); } catch { }
 				syncLockedPonyInfo(this.info);
 			});
 		}
@@ -306,6 +321,12 @@ export class Character implements OnInit, OnDestroy {
 			this.info.tail.fills[0] = this.info.coatFill;
 			this.changed();
 		}
+	}
+
+	resetBackground() {
+		// default green (matches GRASS_COLOR = 0x90ee90ff)
+		this.info.previewBackground = '90ee90';
+		this.changed();
 	}
 	eyeColorLockChanged(locked: boolean) {
 		if (locked) {

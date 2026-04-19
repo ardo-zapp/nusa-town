@@ -14,7 +14,7 @@ import { filterBadWords } from '../common/swears';
 import { randomString } from '../common/stringUtils';
 import {
 	getCounter, holdToy, getCollectedToysCount, getCollectedToysList, holdItem, playerSleep, playerBlush, playerLove, playerCry,
-	setEntityExpression, execAction, teleportTo
+	setEntityExpression, execAction, teleportTo, openGift
 } from './playerUtils';
 import { ServerLiveSettings, GameServerSettings } from '../common/adminInterfaces';
 import { isCommand, processCommand, clamp, flatten, includes, randomPoint, parseSeason, parseHoliday, toInt } from '../common/utils';
@@ -203,9 +203,9 @@ export function createCommands(world: World): Command[] {
 		command(['droptoy'], '/droptoy - drop held toy', '', ({ }, client, _, __, ___, settings) => {
 			execAction(client, Action.DropToy, settings);
 		}),
-		// command(['open'], '/open - open gift', '', ({ }, client) => {
-		// 	openGift(client);
-		// }),
+		command(['open'], '/open - open gift', '', ({ }, client) => {
+			openGift(client);
+		}),
 
 		// counters
 		command(['gifts'], '/gifts - show gift score', '', ({ }, client, _, type, target, settings) => {

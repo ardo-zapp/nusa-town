@@ -217,7 +217,7 @@ export class ServerActions implements IServerActions, SocketServer {
 			this.client.updateSelection(entityId, 0);
 		}
 	}
-	@Method({ rateLimit: '2/s', serverRateLimit: '4/s', binary: [Bin.U32] })
+	@Method({ rateLimit: '10/s', serverRateLimit: '20/s', binary: [Bin.U32] })
 	interact(entityId: number) {
 		validateNumber(entityId, 'entityId');
 		this.updateLastAction();

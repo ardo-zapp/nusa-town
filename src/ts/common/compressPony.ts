@@ -14,7 +14,7 @@ import {
 } from '../client/ponyUtils';
 import { CM_SIZE } from './constants';
 
-export const VERSION = 5; // previous: 3
+export const VERSION = 6; // previous: 5
 
 const VERSION_BITS = 6; // max 63
 const COLORS_LENGTH_BITS = 10; // max 1024
@@ -162,6 +162,13 @@ const booleanFields: FieldDefinition<boolean>[] = [
 	{ name: 'unlockBackLegAccessory', omit: info => !!info.lockBackLegAccessory },
 	{ name: 'unlockEyelashColor' },
 	{ name: 'darkenLockedOutlines', omit: info => !info.freeOutlines },
+	{ name: 'blush' },
+	{ name: 'sleeping' },
+	{ name: 'tears' },
+	{ name: 'crying' },
+	{ name: 'hearts' },
+	{ name: 'flip' },
+	{ name: 'headTurned' },
 ];
 
 const numberFields: FieldDefinition<number>[] = [
@@ -171,6 +178,7 @@ const numberFields: FieldDefinition<number>[] = [
 	{ name: 'fangs' },
 	{ name: 'muzzle' },
 	{ name: 'freckles', dontSave: true }, // TODO: remove
+	{ name: 'headTurn' },
 ];
 
 const colorFields: FieldDefinition<number>[] = [
@@ -187,6 +195,7 @@ const colorFields: FieldDefinition<number>[] = [
 	{ name: 'magicColor', default: WHITE },
 ];
 
+
 const omittableFields: FieldDefinition<any>[] = [
 	...setFields,
 	...booleanFields,
@@ -197,13 +206,13 @@ const omittableFields: FieldDefinition<any>[] = [
 /* istanbul ignore next */
 if (DEVELOPMENT) {
 	(function () {
-		function verifyFields(obj: any, lengthBits: number, defs: FieldDefinition<any>[], verify: (field: any) => boolean) {
+		function verifyFields(obj: any, lengthBits: number, defs: FieldDefinition<any>[], verify: (field: any, key: string) => boolean) {
 			const missing = Object.keys(obj)
-				.filter(key => verify(obj[key]))
+				.filter(key => verify(obj[key], key))
 				.filter(key => defs.every(d => d.name !== key));
 
 			const unnecessary = defs
-				.filter(({ name }) => !verify(obj[name]));
+				.filter(({ name }) => !verify(obj[name], name));
 
 			if (missing.length || unnecessary.length) {
 				throw new Error(`Incorrect fields (${missing} / ${unnecessary})`);
@@ -216,7 +225,9 @@ if (DEVELOPMENT) {
 
 		const defaultPony = createBasePony();
 		verifyFields(defaultPony, SET_FIELDS_LENGTH_BITS, setFields, f => f.type !== undefined);
-		verifyFields(defaultPony, COLOR_FIELDS_LENGTH_BITS, colorFields, isString);
+		// We filter out previewBackground when strictly validating color strings
+		const stringKeys = ['name', 'desc', 'tag', 'previewBackground'];
+		verifyFields(defaultPony, COLOR_FIELDS_LENGTH_BITS, colorFields, (f, key) => isString(f) && !stringKeys.includes(key));
 		verifyFields(defaultPony, NUMBER_FIELDS_LENGTH_BITS, numberFields, isNumber);
 		verifyFields(defaultPony, BOOLEAN_FIELDS_LENGTH_BITS, booleanFields, isBoolean);
 

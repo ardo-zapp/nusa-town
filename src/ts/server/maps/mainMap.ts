@@ -77,8 +77,16 @@ function donateEgg(_: any, client: IClient) {
 
 // Leaderboard state (seasonal)
 
+let cachedGiftsLeadersMessage: string | null = null;
+let lastGiftsLeadersUpdate = 0;
+const GIFTS_LEADERS_UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
 export async function buildGiftsLeadersMessage(): Promise<string> {
 	const now = new Date();
+	if (cachedGiftsLeadersMessage && (now.getTime() - lastGiftsLeadersUpdate) < GIFTS_LEADERS_UPDATE_INTERVAL) {
+		return cachedGiftsLeadersMessage;
+	}
+
 	const year = (now.getMonth() === 11) ? now.getFullYear() + 1 : now.getFullYear();
 
 	// Fetch top 3 accounts by state.gifts from DB (state.gifts is the canonical place)
@@ -122,7 +130,9 @@ export async function buildGiftsLeadersMessage(): Promise<string> {
 		}
 	}
 
-	return lines.join('\n');
+	cachedGiftsLeadersMessage = lines.join('\n');
+	lastGiftsLeadersUpdate = now.getTime();
+	return cachedGiftsLeadersMessage;
 }
 
 function removeSeasonalObjects(world: World, map: ServerMap) {
@@ -1412,7 +1422,7 @@ function addSeasonalObjects(world: World, map: ServerMap, season: Season, holida
 		add(entities.giftPile3(132.66, 47.25));
 		add(entities.giftPileTree(118.78, 48.25));
 
-		// Seasonal leaderboard sign placed slightly right of pixel.horse
+		// Seasonal leaderboard sign placed slightly right of Nusa Town
 		add(createSign(72.2, 70.5, 'Gifts on leaders', (entity, client) => {
 			(async () => {
 				const msg = await buildGiftsLeadersMessage();
