@@ -1,4 +1,5 @@
 import { range, compact, escapeRegExp } from 'lodash';
+// Speed and time command fixes
 import {
 	MessageType, ChatType, Expression, Eye, Muzzle, Action, Weather, toAnnouncementMessageType,
 } from '../common/interfaces';
@@ -53,35 +54,45 @@ export interface Command {
 	names: string[];
 	help: string;
 	role: string;
+	category?: string;
 	spam?: boolean;
 	handler: CommandHandler;
 }
 
 function hasRoleNull(client: IClient, role: string) {
-	if (!role || hasRole(client.account, role))
-		return true;
+	if (!role) return true; // No role requirement
+	if (hasRole(client.account, role)) return true; // Has exact role
 
-	return (role === 'sup1' && (client.supporterLevel >= 1 || client.isMod)) ||
-		(role === 'sup2' && (client.supporterLevel >= 2 || client.isMod)) ||
-		(role === 'sup3' && (client.supporterLevel >= 3 || client.isMod));
+	// Role hierarchy: supporter levels
+	if (role.startsWith('sup')) {
+		const level = parseInt(role.charAt(3), 10);
+		return (client.supporterLevel >= level || client.isMod);
+	}
+
+	// Role hierarchy: mod < admin < superadmin
+	if (client.isMod) return role === 'mod';
+	if (hasRole(client.account, 'admin')) return role === 'admin' || role === 'mod';
+	if (hasRole(client.account, 'superadmin')) return role === 'superadmin' || role === 'admin' || role === 'mod';
+
+	return false;
 }
 
-function command(names: string[], help: string, role: string, handler: CommandHandler, spam = false): Command {
-	return { names, help, role, handler, spam };
+function command(names: string[], help: string, role: string, handler: CommandHandler, spam = false, category?: string): Command {
+	return { names, help, role, handler, spam, category };
 }
 
-function emote(names: string[], expr: Expression, timeout?: number, cancellable?: boolean) {
-	return command(names, '', '', ({ }, { pony }) => setEntityExpression(pony, expr, timeout, cancellable));
+function emote(names: string[], expr: Expression, timeout?: number, cancellable?: boolean, category?: string) {
+	return command(names, '', '', ({ }, { pony }) => setEntityExpression(pony, expr, timeout, cancellable), false, category);
 }
 
-function action(names: string[], action: Action) {
-	return command(names, '', '', ({ }, client, _, __, ___, settings) => execAction(client, action, settings));
+function action(names: string[], actionName: Action, category?: string) {
+	return command(names, '', '', ({ }, client, _, __, ___, settings) => execAction(client, actionName, settings), false, category);
 }
 
-function adminModChat(names: string[], help: string, role: string, type: MessageType) {
+function adminModChat(names: string[], help: string, role: string, type: MessageType, category?: string) {
 	return command(names, help, role, ({ }, client, message, _, __, settings) => {
 		sayToEveryone(client, message, filterBadWords(message), type, settings);
-	});
+	}, false, category);
 }
 
 function parseWeather(value: string): Weather | undefined {
@@ -156,13 +167,30 @@ export function createCommands(world: World): Command[] {
 	const commands = compact([
 		// chat
 		command(['help', 'h', '?'], '/help - show help', '', ({ }, client) => {
-			const help = commands
-				.filter(c => c.help && hasRoleNull(client, c.role))
-				.map(c => c.help)
-				.join('\n');
+			const filtered = commands
+				.filter((c: Command) => c.help && hasRoleNull(client, c.role));
 
-			saySystem(client, help);
-		}),
+			// Group commands by category
+			const grouped: { [key: string]: Command[] } = {};
+			filtered.forEach((cmd: Command) => {
+				const cat = cmd.category || 'Other';
+				if (!grouped[cat]) grouped[cat] = [];
+				grouped[cat].push(cmd);
+			});
+
+			// Build help text with categories
+			const helpLines: string[] = [];
+			const categoryOrder = ['Chat', 'Actions', 'Pony states', 'Emotes', 'Expressions', 'House', 'Supporters', 'Mod', 'Admin', 'Superadmin', 'Debug', 'Other'];
+
+			for (const cat of categoryOrder) {
+				if (grouped[cat]) {
+					helpLines.push('\n' + cat);
+					helpLines.push(grouped[cat].map((c: Command) => c.help).join('\n'));
+				}
+			}
+
+			saySystem(client, helpLines.join('\n'));
+		}, false, 'Chat'),
 		command(['roll', 'rand', 'random'], '/roll [[min-]max] - randomize a number', '',
 			({ random }, client, args, type, target, settings) => {
 				const ROLL_MAX = 1000000;
@@ -172,22 +200,22 @@ export function createCommands(world: World): Command[] {
 				const result = args === '🍎' ? args : random(minValue, maxValue);
 				const message = `🎲 rolled ${result} of ${minValue !== 1 ? `${minValue}-` : ''}${maxValue}`;
 				sayToOthers(client, message, toAnnouncementMessageType(type), target, settings);
-			}, true),
-		command(['s', 'say'], '/s - say', '', shouldNotBeCalled),
-		command(['p', 'party'], '/p - party chat', '', shouldNotBeCalled),
-		command(['t', 'think'], '/t - thinking balloon', '', shouldNotBeCalled),
-		command(['w', 'whisper'], '/w <name> - whisper to player', '', shouldNotBeCalled),
-		command(['r', 'reply'], '/r - reply to whisper', '', shouldNotBeCalled),
-		command(['shrug'], '/shrug - ¯\\_(ツ)_/¯', '', shouldNotBeCalled),
+			}, true, 'Chat'),
+		command(['s', 'say'], '/s - say', '', shouldNotBeCalled, false, 'Chat'),
+		command(['p', 'party'], '/p - party chat', '', shouldNotBeCalled, false, 'Chat'),
+		command(['t', 'think'], '/t - thinking balloon', '', shouldNotBeCalled, false, 'Chat'),
+		command(['w', 'whisper'], '/w <name> - whisper to player', '', shouldNotBeCalled, false, 'Chat'),
+		command(['r', 'reply'], '/r - reply to whisper', '', shouldNotBeCalled, false, 'Chat'),
+		command(['shrug'], '/shrug - ¯\\_(ツ)_/¯', '', shouldNotBeCalled, false, 'Chat'),
 		command(['e'], '/e - set permanent expression', '', ({ }, { pony }, message) => {
 			pony.exprPermanent = parseExpression(message, true);
 			setEntityExpression(pony, undefined, 0);
-		}),
+		}, false, 'Chat'),
 
 		// actions
 		command(['turn'], '/turn - turn head', '', ({ }, client, _, __, ___, settings) => {
 			execAction(client, Action.TurnHead, settings);
-		}),
+		}, false, 'Actions'),
 		command(['boop', ')'], '/boop or /) - a boop', '', ({ }, client, message, _, __, settings) => {
 			const expression = parseExpression(message, true);
 
@@ -506,7 +534,7 @@ export function createCommands(world: World): Command[] {
 			} else {
 				updateMapState(client.map, { weather });
 			}
-		}),
+		}, false, 'Chat'),
 
 		// superadmin
 		command(['update'], '/update - prepare server for update', 'superadmin', ({ world, liveSettings }) => {
@@ -568,26 +596,26 @@ export function createCommands(world: World): Command[] {
 						}
 					}, 100);
 				}
-			}),
+			}, false, 'Superadmin'),
 		BETA && command(['noclouds'], '/noclouds - remove clouds', 'superadmin', ({ world }, client) => {
 			findEntities(client.map, e => e.type === cloud.type).forEach(e => world.removeEntity(e, client.map));
-		}),
+		}, false, 'Superadmin'),
 		BETA && command(['msg'], '/msg - say random stuff', 'superadmin', ({ }, client, _, __, ___, settings) => {
 			findEntities(client.map, e => !!e.options && e.name === 'debug 2')
 				.forEach(e => sayToAll(e, 'Hello there!', 'Hello there!', MessageType.Chat, settings));
-		}),
+		}, false, 'Superadmin'),
 		BETA && command(['hold'], '/hold <name> - hold item', 'superadmin', ({ }, client, message) => {
 			holdItem(client.pony, getEntityType(message));
-		}),
+		}, false, 'Superadmin'),
 		BETA && command(['toy'], '/toy <number> - hold toy', 'superadmin', ({ }, client, message) => {
 			holdToy(client.pony, parseInt(message, 10) | 0);
-		}),
+		}, false, 'Superadmin'),
 		BETA && command(['dc'], '/dc', 'superadmin', ({ }, client) => {
 			client.disconnect(true, false);
-		}),
+		}, false, 'Superadmin'),
 		BETA && command(['disconnect'], '/disconnect', 'superadmin', ({ }, client) => {
 			client.disconnect(true, true);
-		}),
+		}, false, 'Superadmin'),
 		BETA && command(['info'], '/info <id>', 'superadmin', ({ world }, client, message) => {
 			const id = parseInt(message, 10) | 0;
 			const entity = world.getEntityById(id);
@@ -599,7 +627,7 @@ export function createCommands(world: World): Command[] {
 			} else {
 				saySystem(client, 'undefined');
 			}
-		}),
+		}, false, 'Superadmin'),
 		BETA && command(['collider'], '/collider', 'superadmin', ({ }, client) => {
 			const region = getRegionGlobal(client.map, client.pony.x, client.pony.y);
 
@@ -608,14 +636,14 @@ export function createCommands(world: World): Command[] {
 				saySystem(client, 'saved');
 				// console.log(region.tileIndices);
 			}
-		}),
+		}, false, 'Superadmin'),
 		DEVELOPMENT && command(['testparty'], '', 'superadmin', ({ party }, client) => {
 			const entities = findEntities(client.map, e => !!e.client && /^debug/.test(e.name || ''));
 
 			for (const e of entities.slice(0, PARTY_LIMIT - 1)) {
 				party.invite(client, e.client!);
 			}
-		}),
+		}, false, 'Superadmin'),
 	]);
 
 	return commands;

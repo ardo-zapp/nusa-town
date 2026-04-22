@@ -910,6 +910,9 @@ export interface WorldState {
 	holiday: Holiday;
 	flags: WorldStateFlags;
 	featureFlags: ServerFeatureFlags;
+	timeFrozen?: boolean;
+	timeSpeed?: number;
+	frozenHour?: number;
 }
 
 export interface MapState {
@@ -1504,6 +1507,7 @@ export interface DrawPonyOptions {
 	shadowColor: number;
 	noEars: boolean;
 	gameTime: number;
+	outlineMode?: boolean; // Draw pony in white for selection outline
 
 	// sheet generation switches
 	no: NoDraw;

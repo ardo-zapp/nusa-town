@@ -191,6 +191,7 @@ export interface IClient extends ClientActions, ClientExtensions {
 	lastTime: number;
 	lastVX: number;
 	lastVY: number;
+	speedMultiplier?: number;
 
 	// sitting reporting
 	lastSitX: number;
@@ -260,6 +261,9 @@ export interface ServerEntity extends Entity {
 	exprTimeout?: number;
 	exprCancellable?: boolean;
 	exprPermanent?: Expression;
+
+	// speed control
+	speedMultiplier?: number; // multiplier for movement speed (1.0 = normal, 0-4)
 
 	// other
 	lightDelay?: number;

@@ -130,7 +130,7 @@ export function stubFromInstance<T>(instance: any): SinonStubbedInstance<T> {
 
 export function resetStubMethods<T>(stub: SinonStubbedInstance<T>, ...methods: (keyof T)[]) {
 	methods.forEach(method => {
-		(stub[method] as any).resetBehavior();
-		(stub[method] as any).reset();
+
+		if(typeof (stub[method] as any).reset === "function") (stub[method] as any).reset();
 	});
 }

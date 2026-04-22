@@ -20,11 +20,13 @@ page-loader(*ngIf="!playing")
 			discord-button.mb-3
 			visit-pt-button.mb-3
 			character-select(
-				[(error)]="error" [newButton]="true" [removeButton]="true" (change)="updateMuzzles()"
-				(preview)="previewPony = $event")
+			[(error)]="error" [newButton]="true" [removeButton]="true" [emojiButton]="true" (change)="updateMuzzles()"
+			(preview)="previewPony = $event")
 
 			.character-preview-box.mx-auto.my-3((fixToTop)="fixed = $event" [fixToTopOffset]="-40" [style.background]="info.previewBackground ? '#' + info.previewBackground : 'var(--grass-color)'")
-				character-preview(#characterPreview [pony]="previewInfo" [state]="state" [scale]="previewScale" [noBackground]="true" [noShadow]="fixed" [name]="previewName" [tag]="previewTag" [extra]="previewExtra" style="z-index: 100")
+				character-preview(
+					#characterPreview [pony]="previewInfo" [state]="state" [scale]="previewScale" [noBackground]="true" [noShadow]="fixed"
+					[name]="previewName" [tag]="previewTag" [extra]="previewExtra" style="z-index: 100")
 
 			.form-group.text-center
 				button.btn.btn-lg.btn-default([disabled]="!canDuplicate" (click)="duplicate()" aria-label="Duplicate character")
@@ -108,7 +110,6 @@ page-loader(*ngIf="!playing")
 								| Crying
 							custom-checkbox([(checked)]="info.hearts" (checkedChange)="changed()")
 								| Hearts
-
 
 					.row.form-group
 						label#social-site-label.col-sm-4.col-form-label Show social site

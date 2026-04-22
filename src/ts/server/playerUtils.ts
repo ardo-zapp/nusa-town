@@ -11,7 +11,7 @@ import {
 import { CharacterState, ServerConfig, AccountState, CharacterStateFlags, GameServerSettings } from '../common/adminInterfaces';
 import {
 	EntityState, Expression, PonyOptions, Action, ExpressionExtra, Eye, Muzzle, getMuzzleOpenness,
-	isExpressionAction, EntityPlayerState, UpdateFlags, InteractAction, Rect, MessageType
+	isExpressionAction, EntityPlayerState, UpdateFlags, InteractAction, Rect, MessageType, getAnimationFromEntityState
 } from '../common/interfaces';
 import { encodeExpression, EMPTY_EXPRESSION, decodeExpression } from '../common/encoders/expressionEncoder';
 import { EXPRESSION_TIMEOUT, DAY, FLY_DELAY, SECOND, PONY_TYPE } from '../common/constants';
@@ -138,6 +138,7 @@ export function createClient(
 	client.lastTime = 0;
 	client.lastVX = 0;
 	client.lastVY = 0;
+	client.speedMultiplier = 1.0;
 	client.lastMapSwitch = 0;
 
 	client.lastSitX = 0;
@@ -177,9 +178,11 @@ export function resetClientUpdates(client: IClient) {
 
 export function createCharacterState(entity: ServerEntity, map: ServerMap): CharacterState {
 	const options = entity.options as PonyOptions;
+	const animation = getAnimationFromEntityState(entity.state || 0);
 	const flags: CharacterStateFlags =
 		(hasFlag(entity.state, EntityState.FacingRight) ? CharacterStateFlags.Right : 0) |
-		(options.extra ? CharacterStateFlags.Extra : 0);
+		(options.extra ? CharacterStateFlags.Extra : 0) |
+		((animation & 0b111) << CharacterStateFlags.AnimationShift);
 	const state: CharacterState = { x: entity.x, y: entity.y };
 
 	if (flags) {

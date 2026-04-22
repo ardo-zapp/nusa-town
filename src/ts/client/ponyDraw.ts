@@ -231,6 +231,33 @@ function getWakeIndex(info: Info) {
 }
 
 export function drawPony(batch: Batch, info: Info, state: State, ponyX: number, ponyY: number, options: Options) {
+	// Draw selection outline glow behind pony
+	if (options.selected) {
+		// Draw white offset outlines (1 pixel in cardinal directions) for selection highlight
+		const outlineOffsets: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+
+		for (const [ox, oy] of outlineOffsets) {
+			batch.save();
+			batch.translate(ox, oy);
+
+			// Draw pony outline in white, without shadow and without selection to avoid recursion
+			const outlineOptions: DrawPonyOptions = {
+				...options,
+				selected: false,
+				shadow: false,
+				shadowColor: TRANSPARENT,
+				outlineMode: true, // Enable white outline rendering
+			};
+			drawPonyImpl(batch, info, state, ponyX, ponyY, outlineOptions);
+			batch.restore();
+		}
+	}
+
+	// Draw the actual pony on top
+	drawPonyImpl(batch, info, state, ponyX, ponyY, options);
+}
+
+function drawPonyImpl(batch: Batch, info: Info, state: State, ponyX: number, ponyY: number, options: Options) {
 	const frame = getPonyAnimationFrame(state.animation, state.animationFrame, defaultBodyFrame);
 	const headFrame = getPonyAnimationFrame(state.headAnimation || defaultHeadAnimation, state.headAnimationFrame, defaultHeadFrame);
 	const headAnimationProperties = (state.headAnimation || defaultHeadAnimation).properties;
@@ -275,16 +302,21 @@ export function drawPony(batch: Batch, info: Info, state: State, ponyX: number, 
 		batch.crop(-40, -70, cropW, cropH);
 	}
 
-	// selection
-	if (options.selected) {
-		const sprite = at(sprites.ponySelections, shadow.frame);
-		sprite && batch.drawSprite(sprite, WHITE, info.defaultPalette, shadowX, shadowY);
-	}
-
-	// shadow
+	// shadow (unchanged - stays black with transparency)
 	if (options.shadow) {
 		const sprite = at(sprites.ponyShadows, shadow.frame);
 		sprite && batch.drawSprite(sprite, options.shadowColor, info.defaultPalette, shadowX, shadowY);
+	}
+
+	// shadow outline for selection
+	if (options.selected && options.shadow) {
+		const sprite = at(sprites.ponyShadows, shadow.frame);
+		if (sprite) {
+			const outlineOffsets: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+			for (const [ox, oy] of outlineOffsets) {
+				batch.drawSprite(sprite, WHITE, info.defaultPalette, shadowX + ox, shadowY + oy);
+			}
+		}
 	}
 
 	// head accessory
@@ -785,7 +817,7 @@ function drawEye(
 }
 
 function drawSet(
-	batch: Batch, sprites: ColorExtraSets, set: PaletteSpriteSet | undefined, x: number, y: number, tint: number
+	batch: Batch, sprites: ColorExtraSets, set: PaletteSpriteSet | undefined, x: number, y: number, tint: number, outlineMode?: boolean
 ) {
 	if (set !== undefined) {
 		const patterns = att(sprites, set.type);
@@ -794,7 +826,9 @@ function drawSet(
 			const patternSprite = at(patterns, set.pattern);
 
 			if (patternSprite !== undefined) {
-				batch.drawSprite(patternSprite.color, tint, set.palette, x, y);
+				// Use WHITE tint if in outline mode
+				const finalTint = outlineMode ? WHITE : tint;
+				batch.drawSprite(patternSprite.color, finalTint, set.palette, x, y);
 			}
 		}
 	}

@@ -66,9 +66,6 @@ function base<T>(black: T, white: T) {
 		frecklesColor: undefined,
 		cm: undefined,
 		cmFlip: undefined,
-		flip: false,
-		headTurned: false,
-		headTurn: 0,
 		customOutlines: false,
 		freeOutlines: false,
 		darkenLockedOutlines: undefined,
@@ -333,7 +330,7 @@ describe('compressPony', () => {
 	describe('compressPony() + decompressPony()', () => {
 		const BASE = base('000000', 'ffffff');
 
-function runTestPony(input: Partial<PonyInfo>, expected?: Partial<PonyInfo>) {
+		function runTestPony(input: Partial<PonyInfo>, expected?: Partial<PonyInfo>) {
 			return () => {
 				const data = compressPonyString(input as any);
 				const result = decompressPonyString(data, false);
@@ -342,8 +339,6 @@ function runTestPony(input: Partial<PonyInfo>, expected?: Partial<PonyInfo>) {
 		}
 
 		it('empty', runTestPony({}, {}));
-
-		it('head/flip', runTestPony({ flip: true, headTurned: true, headTurn: 3 }, { flip: true, headTurned: true, headTurn: 3 }));
 
 		it('coatFill', runTestPony({ coatFill: 'ff0000' }, { coatFill: 'ff0000', coatOutline: 'b30000' }));
 
@@ -424,7 +419,7 @@ function runTestPony(input: Partial<PonyInfo>, expected?: Partial<PonyInfo>) {
 				}
 			}));
 
-it('set', runTestPony({
+		it('set', runTestPony({
 			mane: {
 				type: 1,
 				pattern: 1,
@@ -442,7 +437,7 @@ it('set', runTestPony({
 				}
 			}));
 
-it('0 colors', runTestPony({
+		it('0 colors', runTestPony({
 			ears: {
 				type: 0,
 				pattern: 0,
@@ -460,7 +455,7 @@ it('0 colors', runTestPony({
 				}
 			}));
 
-it('extraAccessory', runTestPony({
+		it('extraAccessory', runTestPony({
 			extraAccessory: {
 				type: 0,
 				pattern: 0,
@@ -482,7 +477,7 @@ it('extraAccessory', runTestPony({
 			neckAccessory: { type: 0, pattern: 0 }
 		}, {}));
 
-it('locked fills', runTestPony({
+		it('locked fills', runTestPony({
 			mane: {
 				type: 1,
 				pattern: 0,
@@ -514,7 +509,7 @@ it('locked fills', runTestPony({
 				},
 			}));
 
-it('locked back hooves', runTestPony({
+		it('locked back hooves', runTestPony({
 			frontHooves: {
 				type: 0,
 				pattern: 0,

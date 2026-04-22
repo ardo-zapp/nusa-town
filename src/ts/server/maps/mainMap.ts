@@ -100,7 +100,7 @@ export async function buildGiftsLeadersMessage(): Promise<string> {
 	const header = `TOP 3 PLAYERS BY GIFTS COLLECTED ${year}`;
 	const sep = '-----------------------------------';
 	const width = sep.length;
-	const giftEmoji = ' 🎁';
+	const giftEmoji = '🎁';
 
 	const lines = [header, sep];
 
@@ -120,6 +120,7 @@ export async function buildGiftsLeadersMessage(): Promise<string> {
 		if (a && gifts > 0) {
 			const rawName = (a.name || 'Player');
 			const name = rawName; // trimming handled by alignColumns
+			// Position goes to LEFT, then player name; gift count goes to RIGHT
 			const left = `${i + 1} ${name}`;
 			const numberStr = `${gifts}${giftEmoji}`;
 			lines.push(alignColumns(left, numberStr, width));
@@ -1579,7 +1580,7 @@ export function updateMainMapSeason(world: World, map: ServerMap, season: Season
 
 export function createMainMap(world: World): ServerMap {
 	const mapSize = 20;
-	const map = createServerMap('', MapType.None, mapSize, mapSize, TileType.Grass);
+	const map = createServerMap('main', MapType.None, mapSize, mapSize, TileType.Grass);
 
 	if (BETA || DEVELOPMENT) { map.flags |= MapFlags.EdibleGrass; }
 
